@@ -275,6 +275,22 @@
   .t3-criterion{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:3px;}
   .t3-evidence{font-size:12px;color:#64748b;line-height:1.5;}
   .t3-sub{font-size:11px;color:#334155;margin-top:2px;}
+  /* Goals + Reports panels */
+  .goal-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e293b;}
+  .goal-row:last-child{border-bottom:none;}
+  .goal-coach{font-size:13px;font-weight:600;color:#f8fafc;flex:1;}
+  .goal-metric{font-size:11px;color:#3b82f6;background:#1e3a5f;padding:3px 8px;border-radius:6px;}
+  .goal-target{font-size:12px;color:#64748b;}
+  .goal-deadline{font-size:11px;color:#475569;}
+  .goal-form{background:#0f172a;border-radius:12px;padding:14px;margin-bottom:12px;}
+  .goal-form select,.goal-form input{background:#1e293b;border:1px solid #334155;color:#f8fafc;
+    border-radius:8px;padding:8px 10px;font-size:13px;width:100%;margin-bottom:8px;box-sizing:border-box;}
+  .goal-form label{font-size:11px;color:#64748b;display:block;margin-bottom:3px;}
+  .report-btn-row{display:flex;flex-direction:column;gap:10px;padding:8px 0;}
+  .report-card{background:#0f172a;border:1px solid #1e3a5f;border-radius:14px;padding:16px;}
+  .report-card-title{font-size:14px;font-weight:700;color:#f8fafc;margin-bottom:4px;}
+  .report-card-sub{font-size:12px;color:#475569;margin-bottom:12px;line-height:1.5;}
+
   /* In-app recorder */
   .record-toggle{display:flex;gap:0;border-radius:12px;overflow:hidden;border:1px solid #1e3a5f;margin-bottom:16px;}
   .record-toggle-btn{flex:1;padding:10px 0;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:background 0.2s,color 0.2s;background:#0f172a;color:#475569;}
@@ -540,9 +556,13 @@
       <div class="dir-tabs">
         <button class="dir-tab active" onclick="showDirPanel('dashboard',this)">Dashboard</button>
         <button class="dir-tab" onclick="showDirPanel('coaches',this)">Coaches</button>
+        <button class="dir-tab" onclick="showDirPanel('goals',this)">Goals</button>
+        <button class="dir-tab" onclick="showDirPanel('reports',this)">Reports</button>
       </div>
       <div id="dir-panel-dashboard" class="dir-panel active"><div class="loading-inline">Loading...</div></div>
       <div id="dir-panel-coaches"   class="dir-panel"><div class="loading-inline">Loading...</div></div>
+      <div id="dir-panel-goals"     class="dir-panel"><div class="loading-inline">Loading...</div></div>
+      <div id="dir-panel-reports"   class="dir-panel"></div>
     </div>
   </div>
 
@@ -970,7 +990,8 @@ function renderRetentionUI(data, name) {
       html += '</div>';
     });
     html += '</div>';
-    html += '<button onclick="showMilestoneCard(\'pb\', 0, \''+name+'\', ' + JSON.stringify(pbItems) + ')" ' +
+    window._lastPBItems = pbItems;  // store safely — no inline serialisation
+    html += '<button onclick="showMilestoneCard(\'pb\', 0, \''+name+'\', window._lastPBItems)" ' +
             'style="width:100%;margin-top:8px;background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;' +
             'border-radius:10px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">📤 Share my bests</button>';
     html += '</div>';
@@ -1935,6 +1956,8 @@ function loadDirectorData(program){
   callBackend('getDirectorViewForProgram', [program],
     function(data){ renderDirCoaches(data, program); },
     function(e){ document.getElementById('dir-panel-coaches').innerHTML='<div class="empty-state">Error loading coaches.</div>'; });
+  renderGoalsPanel(program);
+  renderReportsPanel(program);
 }
 
 function renderDirDashboard(dash, program) {
@@ -2813,7 +2836,8 @@ function showMilestoneCard(type, value, coachName, pbItems) {
 
       ctx.fillStyle = '#93c5fd';
       ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
-      var val = typeof p.val === 'number' ? p.val.toFixed(1) : (p.value||0).toFixed(1);
+      var raw = p.val !== undefined ? p.val : (p.value !== undefined ? p.value : 0);
+      var val = typeof raw === 'number' ? raw.toFixed(p.unit === '%' ? 0 : 1) : String(raw);
       ctx.fillText(val + (p.unit||''), cx + cellW/2, cy + 110);
     });
   }
@@ -2987,6 +3011,364 @@ function buildCertificatePDF(d) {
 
   var filename = 'Voach_Certificate_' + (d.coachName||'Coach').replace(/\s+/g,'_') + '_' + (d.season||'').replace(/[^0-9a-z-]/gi,'_') + '.pdf';
   doc.save(filename);
+}
+
+
+// ── Goals panel ───────────────────────────────────────────────
+function renderGoalsPanel(program) {
+  var el = document.getElementById('dir-panel-goals');
+  if (!el) return;
+
+  // Get coach list from existing data
+  callBackend('getDirectorViewForProgram', [program],
+    function(data) {
+      var coaches = (data && data.coaches) ? data.coaches : [];
+      var html = '';
+
+      // Add goal form
+      html += '<div class="goal-form">';
+      html += '<div style="font-size:14px;font-weight:700;color:#f8fafc;margin-bottom:12px;">Set a development goal</div>';
+      html += '<label>Coach</label>';
+      html += '<select id="goalCoachSel">';
+      html += '<option value="">Select coach...</option>';
+      coaches.forEach(function(c) {
+        html += '<option value="' + c.name + '">' + c.name + '</option>';
+      });
+      html += '</select>';
+      html += '<label>Metric</label>';
+      html += '<select id="goalMetricSel">';
+      html += '<option value="openQ">Discovery Questions (/1000w)</option>';
+      html += '<option value="qi">Questioning Balance (ratio)</option>';
+      html += '<option value="praise">Positive Moments (/1000w)</option>';
+      html += '<option value="pc">Encouragement Ratio</option>';
+      html += '<option value="tactical">Game Language (/1000w)</option>';
+      html += '<option value="teachingScore">Teaching Score (%)</option>';
+      html += '</select>';
+      html += '<label>Target value</label>';
+      html += '<input type="number" id="goalTargetVal" placeholder="e.g. 5.0" step="0.1">';
+      html += '<label>Deadline (optional)</label>';
+      html += '<input type="date" id="goalDeadline">';
+      html += '<button class="submit-btn" style="margin-top:4px;padding:10px;" onclick="submitGoal()">Set Goal →</button>';
+      html += '</div>';
+
+      // Show existing goals
+      html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#64748b;margin-bottom:8px;">ACTIVE GOALS</div>';
+
+      var hasGoals = false;
+      coaches.forEach(function(c) {
+        callBackend('getCoachGoals', [c.name],
+          function(goals) {
+            if (!goals || !goals.length) return;
+            hasGoals = true;
+            var goalEl = document.getElementById('goalsList');
+            if (!goalEl) return;
+            var metricLabels = {openQ:'Discovery Q', qi:'Q:I Balance', praise:'Positive Moments',
+                                pc:'Encouragement', tactical:'Game Language', teachingScore:'Teaching Score'};
+            goals.forEach(function(g) {
+              goalEl.innerHTML += '<div class="goal-row">' +
+                '<div class="goal-coach">' + c.name + '</div>' +
+                '<span class="goal-metric">' + (metricLabels[g.metric]||g.metric) + '</span>' +
+                '<span class="goal-target">Target: ' + g.target + '</span>' +
+                (g.deadline ? '<span class="goal-deadline">By ' + g.deadline + '</span>' : '') +
+                '</div>';
+            });
+          },
+          function(){}
+        );
+      });
+
+      html += '<div id="goalsList" style="background:#0f172a;border-radius:12px;padding:12px;min-height:60px;">';
+      html += '<div style="font-size:12px;color:#334155;">Loading goals...</div>';
+      html += '</div>';
+
+      el.innerHTML = html;
+    },
+    function() { el.innerHTML = '<div class="empty-state">Error loading coaches.</div>'; }
+  );
+}
+
+function submitGoal() {
+  var coach    = document.getElementById('goalCoachSel').value;
+  var metric   = document.getElementById('goalMetricSel').value;
+  var target   = document.getElementById('goalTargetVal').value;
+  var deadline = document.getElementById('goalDeadline').value;
+  var pin      = sessionStorage.getItem('directorPin') || '';
+
+  if (!coach || !metric || !target) { alert('Please fill in coach, metric, and target.'); return; }
+
+  callBackend('setCoachGoal', [pin, coach, metric, parseFloat(target), deadline],
+    function(r) {
+      if (r && r.success) {
+        alert('Goal set for ' + coach + ' ✓');
+        var prog = sessionStorage.getItem('directorProgram') || '';
+        renderGoalsPanel(prog);
+      } else {
+        alert(r ? r.error : 'Error setting goal.');
+      }
+    },
+    function(e) { alert('Error: ' + (e.message||String(e))); }
+  );
+}
+
+// ── Reports panel ─────────────────────────────────────────────
+function renderReportsPanel(program) {
+  var el = document.getElementById('dir-panel-reports');
+  if (!el) return;
+
+  el.innerHTML =
+    '<div class="report-btn-row">' +
+    '<div class="report-card">' +
+    '<div class="report-card-title">📊 Detailed Staff Report</div>' +
+    '<div class="report-card-sub">Full season breakdown — every coach, all metrics, grade distributions, upload frequency, and development goals. Designed for internal staff review.</div>' +
+    '<button class="submit-btn" id="detailReportBtn" onclick="downloadClubReport(\'detailed\',\''+program+'\')" style="padding:10px;">Generate Detailed Report →</button>' +
+    '</div>' +
+    '<div class="report-card">' +
+    '<div class="report-card-title">🏆 Executive Summary</div>' +
+    '<div class="report-card-sub">One-page program health overview — headline stats, top performers, and key development areas. Board-ready and shareable with club leadership.</div>' +
+    '<button class="submit-btn" id="execReportBtn" onclick="downloadClubReport(\'executive\',\''+program+'\')" style="padding:10px;">Generate Executive Summary →</button>' +
+    '</div>' +
+    '</div>';
+}
+
+function downloadClubReport(type, program) {
+  var btnId = type === 'detailed' ? 'detailReportBtn' : 'execReportBtn';
+  var btn   = document.getElementById(btnId);
+  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+
+  callBackend('getClubReport', [program],
+    function(data) {
+      if (btn) { btn.textContent = type==='detailed' ? 'Generate Detailed Report →' : 'Generate Executive Summary →'; btn.disabled=false; }
+      if (!data || data.error) { alert(data?data.error:'Error generating report.'); return; }
+      if (type === 'detailed') buildDetailedClubPDF(data);
+      else buildExecutiveSummaryPDF(data);
+    },
+    function(e) {
+      if (btn) { btn.textContent = type==='detailed'?'Generate Detailed Report →':'Generate Executive Summary →'; btn.disabled=false; }
+      alert('Error: ' + (e.message||String(e)));
+    }
+  );
+}
+
+// ── Detailed Club PDF ──────────────────────────────────────────
+function buildDetailedClubPDF(d) {
+  var jsPDFLib=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
+  if(!jsPDFLib){alert('PDF library not loaded.');return;}
+  var doc=new jsPDFLib({orientation:'portrait',unit:'mm',format:'a4'});
+  var PW=210,PH=297,M=18,CW=PW-M*2;
+  var y=0;
+
+  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
+  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
+  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
+  function chk(n){if(y+n>PH-16)newPage();}
+  function sp(n){y+=n;}
+
+  function pageHeader(){
+    fc('#1e3a5f');doc.rect(0,0,PW,10,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','normal');tc('#DBEAFE');
+    doc.text('Voach  ·  ' + (d.program||'') + '  ·  Staff Report  ·  ' + (d.season||''),M,6.5);
+    y=18;
+  }
+  function newPage(){doc.addPage();fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');pageHeader();sc('#E2E8F0',0.3);doc.line(M-4,16,M-4,PH-16);}
+  function divLabel(text){sp(10);chk(10);sc('#E2E8F0',0.4);doc.line(M,y,PW-M,y);sp(5);tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.text(text.toUpperCase(),M,y);sp(8);}
+
+  // Cover
+  fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');
+  fc('#1e3a5f');doc.rect(0,0,PW,60,'F');
+  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  COACHING STAFF REPORT',M,14);
+  tc('#FFFFFF');doc.setFontSize(24);doc.setFont('helvetica','bold');doc.text(d.program||'Program',M,32);
+  tc('#94A3B8');doc.setFontSize(11);doc.setFont('helvetica','normal');doc.text((d.season||'') + ' Season  ·  Generated ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),M,44);
+
+  sc('#E2E8F0',0.3);doc.line(M-4,60,M-4,PH-16);
+  y=72;
+
+  // Summary stats
+  var stats=[
+    {label:'Total Coaches',    val:d.coachCount||0,    unit:''},
+    {label:'Season Sessions',  val:d.seasonSessions||0,unit:''},
+    {label:'Program Health',   val:(d.healthScore||0)+'%',unit:''},
+    {label:'Active This Month',val:d.activeCoaches||0, unit:''}
+  ];
+  var sw=(CW-18)/4;
+  stats.forEach(function(s,i){
+    var sx=M+i*(sw+6);
+    fc('#EFF6FF');doc.rect(sx,y,sw,18,'F');
+    sc('#DBEAFE',0.3);doc.rect(sx,y,sw,18,'S');
+    tc('#64748B');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(s.label.toUpperCase(),sx+sw/2,y+6,{align:'center'});
+    tc('#1E3A5F');doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(String(s.val)+s.unit,sx+sw/2,y+14,{align:'center'});
+  });
+  sp(26);
+
+  // Program averages
+  divLabel('Program averages this season');
+  var avgRows=[
+    {label:'Discovery Questions',val:(d.programAvg&&d.programAvg.openQ)?d.programAvg.openQ.toFixed(1):'-',unit:'/1000w'},
+    {label:'Questioning Balance', val:(d.programAvg&&d.programAvg.qi)?d.programAvg.qi.toFixed(2):'-',unit:''},
+    {label:'Game Language',        val:(d.programAvg&&d.programAvg.tactical)?d.programAvg.tactical.toFixed(1):'-',unit:'/1000w'},
+    {label:'Teaching Score',       val:d.programAvg?Math.round(d.programAvg.ts):'-%',unit:'%'}
+  ];
+  avgRows.forEach(function(r){
+    chk(12);fc('#F8FAFC');doc.rect(M,y,CW,10,'F');sc('#E2E8F0',0.2);doc.rect(M,y,CW,10,'S');
+    tc('#0F172A');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(r.label,M+4,y+6.5);
+    tc('#1E3A5F');doc.setFont('helvetica','bold');doc.text(String(r.val)+r.unit,PW-M-4,y+6.5,{align:'right'});
+    sp(12);
+  });
+
+  // Per-coach table
+  divLabel('Coaching staff — ' + (d.season||'') + ' season');
+  var coaches = d.coaches || [];
+  coaches.forEach(function(c){
+    chk(22);
+    var statusColor = c.uploadStatus==='recent'?'#16A34A':c.uploadStatus==='due'?'#D97706':'#DC2626';
+    var gradeBg = {A:'#14532D',B:'#1E3A5F',C:'#713F12',D:'#7F1D1D'}[c.dominantGrade]||'#1E3A5F';
+    var gradeTx = {A:'#86EFAC',B:'#93C5FD',C:'#FDE68A',D:'#FCA5A5'}[c.dominantGrade]||'#93C5FD';
+    fc('#F8FAFC');doc.rect(M,y,CW,20,'F');
+    sc('#E2E8F0',0.2);doc.rect(M,y,CW,20,'S');
+
+    // Grade badge
+    var gbc=rgb(gradeBg);doc.setFillColor(gbc[0],gbc[1],gbc[2]);doc.rect(M,y,14,20,'F');
+    tc(gradeTx);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text(c.dominantGrade||'?',M+7,y+13,{align:'center'});
+
+    // Name + sessions
+    tc('#0F172A');doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(c.name,M+18,y+8);
+    tc('#64748B');doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(c.seasonSessions+' sessions this season  ·  last upload '+c.daysSince+' days ago',M+18,y+15);
+
+    // Status dot
+    var sdc=rgb(statusColor);doc.setFillColor(sdc[0],sdc[1],sdc[2]);doc.circle(PW-M-4,y+10,2.5,'F');
+
+    // Metrics mini-row
+    var mLabels=['DQ','Q:I','Praise','P:C','GL'];
+    var mVals=[c.avgs.openQ,c.avgs.qi,c.avgs.praise,c.avgs.pc,c.avgs.tactical];
+    var mStartX=M+18, mW2=(CW-22)/5;
+    // shown below main row
+    sp(22);
+    chk(10);
+    fc('#F1F5F9');doc.rect(M+14,y,CW-14,10,'F');
+    mLabels.forEach(function(lbl,i){
+      var mx=mStartX+i*mW2;
+      tc('#94A3B8');doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.text(lbl,mx,y+4.5);
+      tc('#1E3A5F');doc.setFontSize(8);doc.setFont('helvetica','bold');
+      var v=mVals[i];doc.text(v>0?v.toFixed(1):'—',mx,y+9);
+    });
+    sp(12);
+
+    // Goals if any
+    if (c.goals && c.goals.length) {
+      var metricLabels2={openQ:'Discovery Q',qi:'Q:I',praise:'Praise',pc:'P:C',tactical:'Game Lang',teachingScore:'Teaching'};
+      c.goals.forEach(function(g){
+        chk(8);
+        tc('#3B82F6');doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('→ Goal: '+(metricLabels2[g.metric]||g.metric)+' ≥ '+g.target+(g.deadline?' by '+g.deadline:''),M+18,y+5);
+        sp(8);
+      });
+    }
+    sp(4);
+  });
+
+  // Footer
+  var totalPg=doc.internal.getNumberOfPages();
+  for(var p=1;p<=totalPg;p++){
+    doc.setPage(p);
+    fc('#1E3A5F');doc.rect(0,PH-10,PW,10,'F');
+    tc('#DBEAFE');doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('Voach  ·  '+d.program+'  ·  Staff Report  ·  Confidential',M,PH-4);
+    doc.text('Page '+p+' of '+totalPg,PW-M,PH-4,{align:'right'});
+  }
+
+  doc.save('Voach_StaffReport_'+(d.program||'Program').replace(/\s+/g,'_')+'_'+(d.season||'')+'.pdf');
+}
+
+// ── Executive Summary PDF ─────────────────────────────────────
+function buildExecutiveSummaryPDF(d) {
+  var jsPDFLib=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
+  if(!jsPDFLib){alert('PDF library not loaded.');return;}
+  var doc=new jsPDFLib({orientation:'landscape',unit:'mm',format:'a4'});
+  var PW=297,PH=210,M=20,CW=PW-M*2;
+
+  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
+  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
+  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
+
+  // Background + header
+  fc('#0F172A');doc.rect(0,0,PW,PH,'F');
+  fc('#1E3A5F');doc.rect(0,0,PW,55,'F');
+  fc('#DBEAFE');doc.rect(0,0,PW,2,'F');
+  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  PROGRAM EXECUTIVE SUMMARY',M,13);
+  tc('#FFFFFF');doc.setFontSize(22);doc.setFont('helvetica','bold');doc.text(d.program||'Program',M,30);
+  tc('#94A3B8');doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text((d.season||'')+' Season  ·  '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),M,42);
+
+  // Health score — large right side
+  var hs=d.healthScore||0;
+  var hsColor=hs>=75?'#22C55E':hs>=50?'#F59E0B':'#EF4444';
+  var hsc=rgb(hsColor);doc.setFillColor(hsc[0],hsc[1],hsc[2]);
+  doc.circle(PW-M-20,27,18,'F');
+  tc('#FFFFFF');doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text(hs+'%',PW-M-20,30,{align:'center'});
+  tc('#DBEAFE');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text('PROGRAM',PW-M-20,37,{align:'center'});
+  doc.text('HEALTH',PW-M-20,42,{align:'center'});
+
+  var y=68;
+
+  // 4 stat cards
+  var stats=[
+    {label:'Coaches',       val:d.coachCount||0,     sub:'enrolled'},
+    {label:'Sessions',      val:d.seasonSessions||0, sub:'this season'},
+    {label:'Active Coaches',val:d.activeCoaches||0,  sub:'uploaded this month'},
+    {label:'Avg Teaching',  val:(d.programAvg?Math.round(d.programAvg.ts):0)+'%',sub:'score'}
+  ];
+  var sw2=(CW-18)/4;
+  stats.forEach(function(s,i){
+    var sx=M+i*(sw2+6);
+    fc('#1E293B');doc.rect(sx,y,sw2,24,'F');
+    sc('#1E3A5F',0.3);doc.rect(sx,y,sw2,24,'S');
+    tc('#64748B');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(s.label.toUpperCase(),sx+sw2/2,y+7,{align:'center'});
+    tc('#F8FAFC');doc.setFontSize(16);doc.setFont('helvetica','bold');doc.text(String(s.val),sx+sw2/2,y+17,{align:'center'});
+    tc('#475569');doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.text(s.sub,sx+sw2/2,y+22,{align:'center'});
+  });
+  y+=32;
+
+  // Top performers + needs attention side by side
+  var colW=(CW-12)/2;
+
+  // Top performers
+  fc('#0F2A1A');doc.rect(M,y,colW,80,'F');
+  sc('#22C55E',0.4);doc.rect(M,y,colW,80,'S');
+  tc('#22C55E');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('TOP PERFORMERS',M+8,y+9);
+  var top=d.topCoaches||[];
+  top.slice(0,3).forEach(function(c,i){
+    tc('#F8FAFC');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text((i+1)+'. '+c.name,M+8,y+20+i*18);
+    tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text('Grade '+c.dominantGrade+'  ·  '+c.seasonSessions+' sessions  ·  DQ: '+(c.avgs.openQ||0).toFixed(1),M+8,y+27+i*18);
+  });
+  if (!top.length){tc('#334155');doc.setFontSize(9);doc.text('No data yet',M+8,y+35);}
+
+  // Needs attention
+  var nx=M+colW+12;
+  fc('#2A0F0F');doc.rect(nx,y,colW,80,'F');
+  sc('#EF4444',0.4);doc.rect(nx,y,colW,80,'S');
+  tc('#EF4444');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('NEEDS ATTENTION',nx+8,y+9);
+  var needs=d.needsAttention||[];
+  if(needs.length){
+    needs.slice(0,3).forEach(function(c,i){
+      tc('#F8FAFC');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(c.name,nx+8,y+20+i*18);
+      tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      var reason=c.daysSince>14?'No upload in '+c.daysSince+' days':'Grade '+c.dominantGrade+' — '+c.seasonSessions+' sessions';
+      doc.text(reason,nx+8,y+27+i*18);
+    });
+  } else {
+    tc('#334155');doc.setFontSize(9);doc.text('All coaches on track ✓',nx+8,y+35);
+  }
+  y+=88;
+
+  // Footer
+  fc('#0F172A');doc.rect(0,PH-12,PW,12,'F');
+  sc('#1E3A5F',0.3);doc.line(0,PH-12,PW,PH-12);
+  tc('#475569');doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text('Voach  ·  voach.io  ·  Hear yourself coach.  ·  Confidential — prepared for club leadership',PW/2,PH-5,{align:'center'});
+
+  doc.save('Voach_ExecutiveSummary_'+(d.program||'Program').replace(/\s+/g,'_')+'_'+(d.season||'')+'.pdf');
 }
 
 function triggerPDFFromCache(idx) {

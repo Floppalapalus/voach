@@ -3120,17 +3120,18 @@ function renderReportsPanel(program) {
     '<div class="report-card">' +
     '<div class="report-card-title">📊 Detailed Staff Report</div>' +
     '<div class="report-card-sub">Full season breakdown — every coach, all metrics, grade distributions, upload frequency, and development goals. Designed for internal staff review.</div>' +
-    '<button class="submit-btn" id="detailReportBtn" onclick="downloadClubReport(\'detailed\',\''+program+'\')" style="padding:10px;">Generate Detailed Report →</button>' +
+    '<button class="submit-btn" id="detailReportBtn" onclick="downloadClubReport(\'detailed\')" style="padding:10px;">Generate Detailed Report →</button>' +
     '</div>' +
     '<div class="report-card">' +
     '<div class="report-card-title">🏆 Executive Summary</div>' +
     '<div class="report-card-sub">One-page program health overview — headline stats, top performers, and key development areas. Board-ready and shareable with club leadership.</div>' +
-    '<button class="submit-btn" id="execReportBtn" onclick="downloadClubReport(\'executive\',\''+program+'\')" style="padding:10px;">Generate Executive Summary →</button>' +
+    '<button class="submit-btn" id="execReportBtn" onclick="downloadClubReport(\'executive\')" style="padding:10px;">Generate Executive Summary →</button>' +
     '</div>' +
     '</div>';
 }
 
-function downloadClubReport(type, program) {
+function downloadClubReport(type) {
+  var program = _dirProgram || null;  // use current filter, null = all programs
   var btnId = type === 'detailed' ? 'detailReportBtn' : 'execReportBtn';
   var btn   = document.getElementById(btnId);
   if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
@@ -3153,6 +3154,7 @@ function downloadClubReport(type, program) {
 function buildDetailedClubPDF(d) {
   var jsPDFLib=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
   if(!jsPDFLib){alert('PDF library not loaded.');return;}
+  d.program = d.program || 'All Programs';
   var doc=new jsPDFLib({orientation:'portrait',unit:'mm',format:'a4'});
   var PW=210,PH=297,M=18,CW=PW-M*2;
   var y=0;
@@ -3283,6 +3285,7 @@ function buildDetailedClubPDF(d) {
 function buildExecutiveSummaryPDF(d) {
   var jsPDFLib=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
   if(!jsPDFLib){alert('PDF library not loaded.');return;}
+  d.program = d.program || 'All Programs';
   var doc=new jsPDFLib({orientation:'landscape',unit:'mm',format:'a4'});
   var PW=297,PH=210,M=20,CW=PW-M*2;
 

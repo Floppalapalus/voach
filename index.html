@@ -941,7 +941,14 @@ function renderRetentionUI(data, name) {
     html += '<div class="streak-label">' + (data.season||'') + ' season</div>';
     if (streak.longest > streak.current) html += '<div class="streak-best">Best ever: ' + streak.longest + ' sessions</div>';
     else if (streak.longest > 1 && streak.current >= streak.longest) html += '<div class="streak-best" style="color:#22c55e;">Personal best streak! 🏆</div>';
-    html += '</div></div>';
+    html += '</div>';
+    // Share button for streak milestones
+    if (streak.current >= 5) {
+      html += '<button onclick="showMilestoneCard(\'streak\', ' + streak.current + ', \''+name+'\', null)" ' +
+              'style="width:100%;margin-top:8px;background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;' +
+              'border-radius:10px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">📤 Share this streak</button>';
+    }
+    html += '</div>';
   }
 
   // Personal bests
@@ -962,7 +969,11 @@ function renderRetentionUI(data, name) {
       html += '<div class="pb-item-value">' + (p.key==='teachingScore' ? Math.round(val) : val.toFixed(1)) + p.unit + '</div>';
       html += '</div>';
     });
-    html += '</div></div>';
+    html += '</div>';
+    html += '<button onclick="showMilestoneCard(\'pb\', 0, \''+name+'\', ' + JSON.stringify(pbItems) + ')" ' +
+            'style="width:100%;margin-top:8px;background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;' +
+            'border-radius:10px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">📤 Share my bests</button>';
+    html += '</div>';
   }
 
   // Season arc
@@ -1754,6 +1765,7 @@ function renderDashboard(data, coach) {
   // Season review button — always at top
   html += '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;">';
   html += '<button class="download-btn" id="seasonReviewBtn" onclick="generateSeasonReview()" style="font-size:13px;padding:10px 18px;">📄 Season Review PDF</button>';
+  html += '<button class="download-btn" id="certBtn" onclick="downloadSeasonCertificate()" style="font-size:13px;padding:10px 18px;margin-left:8px;">🏅 Season Certificate</button>';
   html += '</div>';
   if(data.seasonAvg){
     var sa=data.seasonAvg, bm={};
@@ -2676,6 +2688,304 @@ function buildSeasonReviewPDF(d) {
   }
 
   var filename = 'Voach_SeasonReview_' + (d.coachName||'Coach').replace(/\s+/g,'_') + '_' + (d.season||'').replace(/[^0-9a-z-]/gi,'_') + '.pdf';
+  doc.save(filename);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// MILESTONE SHARE CARD
+// ═══════════════════════════════════════════════════════════════
+
+function showMilestoneCard(type, value, coachName, pbItems) {
+  // Remove any existing overlay
+  var existing = document.getElementById('milestoneOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'milestoneOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+
+  var canvas = document.createElement('canvas');
+  canvas.width  = 1080;
+  canvas.height = 1080;
+  canvas.style.cssText = 'width:320px;height:320px;border-radius:16px;display:block;';
+
+  var ctx = canvas.getContext('2d');
+
+  // Background gradient
+  var grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+  grad.addColorStop(0,   '#0f172a');
+  grad.addColorStop(0.5, '#1e3a5f');
+  grad.addColorStop(1,   '#0f172a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1080, 1080);
+
+  // Subtle grid pattern
+  ctx.strokeStyle = 'rgba(59,130,246,0.06)';
+  ctx.lineWidth = 1;
+  for (var gx = 0; gx < 1080; gx += 60) {
+    ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,1080); ctx.stroke();
+  }
+  for (var gy = 0; gy < 1080; gy += 60) {
+    ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(1080,gy); ctx.stroke();
+  }
+
+  // Top brand bar
+  ctx.fillStyle = 'rgba(30,58,95,0.8)';
+  ctx.fillRect(0, 0, 1080, 100);
+  ctx.fillStyle = '#93c5fd';
+  ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('VOACH', 60, 62);
+  ctx.fillStyle = '#475569';
+  ctx.font = '26px system-ui, -apple-system, sans-serif';
+  ctx.fillText('Hear yourself coach.', 220, 62);
+
+  // Decorative circle
+  ctx.beginPath();
+  ctx.arc(540, 420, 260, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(59,130,246,0.15)';
+  ctx.lineWidth = 40;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(540, 420, 200, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(59,130,246,0.08)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  if (type === 'streak') {
+    // Emoji
+    ctx.font = '160px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(value >= 20 ? '🔥🔥' : value >= 10 ? '🔥' : '⚡', 540, 380);
+
+    // Number
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 140px system-ui, -apple-system, sans-serif';
+    ctx.fillText(value, 540, 560);
+
+    ctx.fillStyle = '#93c5fd';
+    ctx.font = 'bold 52px system-ui, -apple-system, sans-serif';
+    ctx.fillText('SESSION STREAK', 540, 640);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '36px system-ui, -apple-system, sans-serif';
+    ctx.fillText('2025-26 season', 540, 700);
+
+  } else if (type === 'pb') {
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 52px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PERSONAL BESTS', 540, 220);
+
+    ctx.fillStyle = '#93c5fd';
+    ctx.font = '34px system-ui, -apple-system, sans-serif';
+    ctx.fillText('2025-26 Season', 540, 270);
+
+    // PB grid
+    var items = pbItems || [];
+    var startY = 340;
+    var cols = items.length <= 2 ? 1 : 2;
+    var cellW = cols === 1 ? 600 : 440;
+    var cellH = 160;
+    var totalW = cols * cellW + (cols-1) * 40;
+    var startX = (1080 - totalW) / 2;
+
+    items.slice(0,4).forEach(function(p, i) {
+      var col = i % cols;
+      var row = Math.floor(i / cols);
+      var cx  = startX + col * (cellW + 40);
+      var cy  = startY + row * (cellH + 20);
+
+      // Card bg
+      ctx.fillStyle = 'rgba(30,58,95,0.6)';
+      roundRect(ctx, cx, cy, cellW, cellH, 16);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(59,130,246,0.3)';
+      ctx.lineWidth = 2;
+      roundRect(ctx, cx, cy, cellW, cellH, 16);
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.label.toUpperCase(), cx + cellW/2, cy + 38);
+
+      ctx.fillStyle = '#93c5fd';
+      ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
+      var val = typeof p.val === 'number' ? p.val.toFixed(1) : (p.value||0).toFixed(1);
+      ctx.fillText(val + (p.unit||''), cx + cellW/2, cy + 110);
+    });
+  }
+
+  // Coach name
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 40px system-ui, -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(coachName, 540, 920);
+
+  // Bottom bar
+  ctx.fillStyle = 'rgba(30,58,95,0.6)';
+  ctx.fillRect(0, 980, 1080, 100);
+  ctx.fillStyle = '#475569';
+  ctx.font = '28px system-ui, -apple-system, sans-serif';
+  ctx.fillText('voach.io  ·  Coaching development, measured.', 540, 1036);
+
+  // Buttons
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:12px;margin-top:16px;';
+
+  var dlBtn = document.createElement('button');
+  dlBtn.textContent = '⬇ Save Image';
+  dlBtn.style.cssText = 'background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;';
+  dlBtn.onclick = function() {
+    var link = document.createElement('a');
+    link.download = 'Voach_Milestone_' + coachName.replace(/\s+/g,'_') + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ Close';
+  closeBtn.style.cssText = 'background:transparent;color:#64748b;border:1px solid #334155;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;';
+  closeBtn.onclick = function() { overlay.remove(); };
+
+  btnRow.appendChild(dlBtn);
+  btnRow.appendChild(closeBtn);
+  overlay.appendChild(canvas);
+  overlay.appendChild(btnRow);
+  document.body.appendChild(overlay);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEASON SUMMARY CERTIFICATE
+// ═══════════════════════════════════════════════════════════════
+
+function downloadSeasonCertificate() {
+  var coach = sessionStorage.getItem('coachName') || _lastCoach;
+  if (!coach) { alert('Please log in first.'); return; }
+  var btn = document.getElementById('certBtn');
+  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+
+  callBackend('generateSeasonReview', [coach],
+    function(data) {
+      if (btn) { btn.innerHTML = '🏅 Season Certificate'; btn.disabled = false; }
+      if (!data || data.error) { alert(data ? data.error : 'Error generating certificate.'); return; }
+      buildCertificatePDF(data);
+    },
+    function(e) {
+      if (btn) { btn.innerHTML = '🏅 Season Certificate'; btn.disabled = false; }
+      alert('Error: ' + (e.message || String(e)));
+    }
+  );
+}
+
+function buildCertificatePDF(d) {
+  var jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
+  if (!jsPDFLib) { alert('PDF library not loaded — try again.'); return; }
+
+  var doc = new jsPDFLib({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  var PW = 297, PH = 210, M = 20;
+
+  function rgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+  function tc(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  function fc(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function sc(h,w){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); if(w) doc.setLineWidth(w); }
+
+  // Background
+  fc('#0f172a'); doc.rect(0,0,PW,PH,'F');
+
+  // Border frame
+  sc('#1e3a5f',0.5); doc.rect(8,8,PW-16,PH-16,'S');
+  sc('#3b82f6',0.3); doc.rect(10,10,PW-20,PH-20,'S');
+
+  // Corner decorations
+  var corners = [[12,12],[PW-12,12],[12,PH-12],[PW-12,PH-12]];
+  corners.forEach(function(c) {
+    sc('#3b82f6',1); doc.circle(c[0],c[1],4,'S');
+    sc('#1e3a5f',0.5); doc.circle(c[0],c[1],7,'S');
+  });
+
+  // Top brand
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); tc('#475569');
+  doc.text('VOACH  ·  COACHING DEVELOPMENT PLATFORM', PW/2, 20, {align:'center'});
+  sc('#1e3a5f',0.4); doc.line(M+10, 23, PW-M-10, 23);
+
+  // Certificate title
+  doc.setFontSize(11); doc.setFont('helvetica','normal'); tc('#64748b');
+  doc.text('This certifies that', PW/2, 34, {align:'center'});
+
+  // Coach name — big
+  doc.setFontSize(38); doc.setFont('helvetica','bold'); tc('#f8fafc');
+  doc.text(d.coachName || 'Coach', PW/2, 56, {align:'center'});
+
+  // Underline
+  var nameW = doc.getTextWidth(d.coachName || 'Coach');
+  sc('#3b82f6',0.8); doc.line(PW/2 - nameW/2, 59, PW/2 + nameW/2, 59);
+
+  // Subtitle
+  doc.setFontSize(11); doc.setFont('helvetica','normal'); tc('#64748b');
+  doc.text('has successfully completed', PW/2, 68, {align:'center'});
+
+  // Season + sessions
+  doc.setFontSize(16); doc.setFont('helvetica','bold'); tc('#93c5fd');
+  doc.text((d.season||'') + ' Coaching Season  ·  ' + (d.sessionCount||0) + ' Sessions Analysed', PW/2, 80, {align:'center'});
+
+  // Metrics strip
+  var metrics = [
+    {label:'Discovery Q',    val: d.avg ? d.avg.dq.toFixed(1)  : '—', unit:'/1000w'},
+    {label:'Q:I Balance',    val: d.avg ? d.avg.qi.toFixed(2)  : '—', unit:''},
+    {label:'Game Language',  val: d.avg ? d.avg.gl.toFixed(1)  : '—', unit:'/1000w'},
+    {label:'Teaching Score', val: d.avg ? Math.round(d.avg.ts) : '—', unit:'%'},
+    {label:'Dominant Grade', val: d.dominantGrade || '—',              unit:''},
+  ];
+  var mW   = 40;
+  var mGap = 8;
+  var totalMW = metrics.length * mW + (metrics.length-1) * mGap;
+  var mStartX = (PW - totalMW) / 2;
+  var mY = 92;
+
+  metrics.forEach(function(m, i) {
+    var mx = mStartX + i * (mW + mGap);
+    // Card
+    fc('#1e293b'); doc.roundedRect(mx, mY, mW, 28, 2, 2, 'F');
+    sc('#1e3a5f',0.3); doc.roundedRect(mx, mY, mW, 28, 2, 2, 'S');
+    // Label
+    doc.setFontSize(6.5); doc.setFont('helvetica','normal'); tc('#64748b');
+    doc.text(m.label.toUpperCase(), mx + mW/2, mY+8, {align:'center'});
+    // Value
+    doc.setFontSize(14); doc.setFont('helvetica','bold'); tc('#93c5fd');
+    doc.text(String(m.val) + m.unit, mx + mW/2, mY+20, {align:'center'});
+  });
+
+  // Next season focus
+  if (d.narrative && d.narrative.nextSeasonFocus) {
+    doc.setFontSize(9); doc.setFont('helvetica','italic'); tc('#475569');
+    doc.text('Next season focus: ' + d.narrative.nextSeasonFocus, PW/2, 130, {align:'center'});
+  }
+
+  // Signature line + footer
+  sc('#1e3a5f',0.4); doc.line(M+10, 152, PW-M-10, 152);
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); tc('#334155');
+  doc.text('Issued by Voach  ·  ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}), PW/2, 158, {align:'center'});
+  doc.setFontSize(7); tc('#1e3a5f');
+  doc.text('voach.io  ·  Hear yourself coach.', PW/2, 164, {align:'center'});
+
+  var filename = 'Voach_Certificate_' + (d.coachName||'Coach').replace(/\s+/g,'_') + '_' + (d.season||'').replace(/[^0-9a-z-]/gi,'_') + '.pdf';
   doc.save(filename);
 }
 

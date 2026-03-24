@@ -275,6 +275,25 @@
   .t3-criterion{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:3px;}
   .t3-evidence{font-size:12px;color:#64748b;line-height:1.5;}
   .t3-sub{font-size:11px;color:#334155;margin-top:2px;}
+  /* In-app recorder */
+  .record-toggle{display:flex;gap:0;border-radius:12px;overflow:hidden;border:1px solid #1e3a5f;margin-bottom:16px;}
+  .record-toggle-btn{flex:1;padding:10px 0;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:background 0.2s,color 0.2s;background:#0f172a;color:#475569;}
+  .record-toggle-btn.active{background:#1e3a5f;color:#93c5fd;}
+  .recorder-panel{display:none;}
+  .recorder-panel.active{display:block;}
+  .record-btn-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 0 16px;}
+  .record-btn{width:80px;height:80px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:32px;transition:all 0.2s;background:#1e3a5f;box-shadow:0 0 0 0 rgba(59,130,246,0.4);}
+  .record-btn.recording{background:#dc2626;animation:pulse-rec 1.5s infinite;}
+  .record-btn.processing{background:#374151;cursor:not-allowed;}
+  @keyframes pulse-rec{0%{box-shadow:0 0 0 0 rgba(220,38,38,0.5);}70%{box-shadow:0 0 0 16px rgba(220,38,38,0);}100%{box-shadow:0 0 0 0 rgba(220,38,38,0);}}
+  .record-status{font-size:14px;font-weight:600;color:#f8fafc;text-align:center;}
+  .record-timer{font-size:28px;font-weight:700;color:#93c5fd;font-variant-numeric:tabular-nums;letter-spacing:2px;}
+  .record-hint{font-size:12px;color:#475569;text-align:center;line-height:1.5;}
+  .compress-bar-wrap{margin:12px 0 4px;display:none;}
+  .compress-bar-track{height:6px;background:#1e293b;border-radius:3px;overflow:hidden;}
+  .compress-bar-fill{height:100%;background:#3b82f6;border-radius:3px;width:0%;transition:width 0.3s;}
+  .compress-label{font-size:11px;color:#475569;margin-bottom:4px;}
+
   /* Streak + retention UI */
   .streak-bar{display:flex;align-items:center;gap:14px;background:var(--bg2);border-radius:14px;padding:14px 18px;margin-bottom:16px;}
   .streak-flame{font-size:28px;line-height:1;}
@@ -428,18 +447,49 @@
         <label class="eyebrow">Session objective</label>
         <textarea id="sessionObjective" placeholder="e.g. Building out from the back by passing or dribbling forward." maxlength="300"></textarea>
         <p class="char-hint">What were you coaching today?</p>
-        <label class="eyebrow">Recording file</label>
-        <div class="file-drop" id="fileDrop" ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
-          <input type="file" id="fileInput" accept=".mp3,.mp4,.m4a,.wav,.webm,.mov,.aac" onchange="onFileSelected(this.files[0])">
-          <div class="upload-icon">🎙</div>
-          <div class="upload-text">Tap to choose a file</div>
-          <div class="upload-hint">MP3 · M4A · MP4 · WAV · MOV</div>
+        <label class="eyebrow">Recording</label>
+        <div class="record-toggle">
+          <button class="record-toggle-btn active" id="tabRecord" onclick="switchRecordTab('record')">🎙 Record</button>
+          <button class="record-toggle-btn" id="tabUpload" onclick="switchRecordTab('upload')">📁 Upload file</button>
         </div>
-        <div id="fileSelectedRow" class="file-selected">
-          <div style="font-size:24px;">🎵</div>
-          <div style="flex:1;min-width:0;"><div class="file-name" id="fileName">—</div><div class="file-size" id="fileSize">—</div></div>
-          <button onclick="clearFile()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;padding:4px;">✕</button>
+
+        <!-- Record panel -->
+        <div class="recorder-panel active" id="panelRecord">
+          <div class="record-btn-wrap">
+            <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙</button>
+            <div class="record-timer" id="recordTimer">0:00</div>
+            <div class="record-status" id="recordStatus">Tap to start recording</div>
+            <div class="record-hint">Record your coaching session live.<br>Tap again to stop and analyse.</div>
+          </div>
+          <div class="compress-bar-wrap" id="compressWrap">
+            <div class="compress-label">Compressing audio...</div>
+            <div class="compress-bar-track"><div class="compress-bar-fill" id="compressFill"></div></div>
+          </div>
+          <div id="recordedRow" class="file-selected" style="display:none;">
+            <div style="font-size:24px;">🎙</div>
+            <div style="flex:1;min-width:0;">
+              <div class="file-name" id="recordedName">Recording</div>
+              <div class="file-size" id="recordedSize">—</div>
+            </div>
+            <button onclick="clearRecording()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;padding:4px;">✕</button>
+          </div>
         </div>
+
+        <!-- Upload panel -->
+        <div class="recorder-panel" id="panelUpload">
+          <div class="file-drop" id="fileDrop" ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
+            <input type="file" id="fileInput" accept=".mp3,.mp4,.m4a,.wav,.webm,.mov,.aac" onchange="onFileSelected(this.files[0])">
+            <div class="upload-icon">🎙</div>
+            <div class="upload-text">Tap to choose a file</div>
+            <div class="upload-hint">MP3 · M4A · MP4 · WAV · MOV</div>
+          </div>
+          <div id="fileSelectedRow" class="file-selected" style="display:none;">
+            <div style="font-size:24px;">🎵</div>
+            <div style="flex:1;min-width:0;"><div class="file-name" id="fileName">—</div><div class="file-size" id="fileSize">—</div></div>
+            <button onclick="clearFile()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;padding:4px;">✕</button>
+          </div>
+        </div>
+
         <div id="fileWarning" class="file-warning"></div>
       </div>
       <div id="uploadError" class="error-msg" style="display:none;"></div>
@@ -1050,23 +1100,265 @@ function onFileSelected(file) {
   checkReady();
 }
 function clearFile(){ selectedFile=null; document.getElementById('fileInput').value=''; document.getElementById('fileSelectedRow').style.display='none'; document.getElementById('fileWarning').style.display='none'; checkReady(); }
+function clearAllRecordingState(){ clearRecording(); clearFile(); }
 function onDragOver(e){ e.preventDefault(); document.getElementById('fileDrop').classList.add('drag-over'); }
 function onDragLeave(){ document.getElementById('fileDrop').classList.remove('drag-over'); }
 function onDrop(e){ e.preventDefault(); document.getElementById('fileDrop').classList.remove('drag-over'); if(e.dataTransfer.files[0]) onFileSelected(e.dataTransfer.files[0]); }
-function checkReady(){ document.getElementById('submitBtn').disabled=!(document.getElementById('ageGroup').value&&selectedFile); }
+
+// ═══════════════════════════════════════════════════════════════
+// IN-APP RECORDER
+// ═══════════════════════════════════════════════════════════════
+var _mediaRecorder  = null;
+var _recordChunks   = [];
+var _recordingActive= false;
+var _recordTimerInt = null;
+var _recordSeconds  = 0;
+var _recordedBlob   = null;
+var _recordedFile   = null;  // used as selectedFile when recording tab active
+var _activeTab      = 'record';
+
+function switchRecordTab(tab) {
+  _activeTab = tab;
+  document.getElementById('panelRecord').classList.toggle('active', tab === 'record');
+  document.getElementById('panelUpload').classList.toggle('active', tab === 'upload');
+  document.getElementById('tabRecord').classList.toggle('active', tab === 'record');
+  document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+  checkReady();
+}
+
+function toggleRecording() {
+  if (_recordingActive) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Recording is not supported on this browser. Please use Safari on iPhone or Chrome on Android.');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+    .then(function(stream) {
+      _recordChunks   = [];
+      _recordedBlob   = null;
+      _recordedFile   = null;
+
+      // Pick best supported format
+      var mimeType = '';
+      var types = ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'];
+      for (var i = 0; i < types.length; i++) {
+        if (MediaRecorder.isTypeSupported(types[i])) { mimeType = types[i]; break; }
+      }
+
+      var options = mimeType ? { mimeType: mimeType } : {};
+      _mediaRecorder = new MediaRecorder(stream, options);
+      _mediaRecorder.ondataavailable = function(e) {
+        if (e.data && e.data.size > 0) _recordChunks.push(e.data);
+      };
+      _mediaRecorder.onstop = function() {
+        stream.getTracks().forEach(function(t){ t.stop(); });
+        onRecordingComplete(_mediaRecorder.mimeType || mimeType || 'audio/webm');
+      };
+      _mediaRecorder.start(1000); // collect chunks every second
+      _recordingActive = true;
+
+      // UI
+      var btn = document.getElementById('recordBtn');
+      btn.classList.add('recording');
+      btn.textContent = '⏹';
+      document.getElementById('recordStatus').textContent = 'Recording — tap to stop';
+      document.getElementById('recordedRow').style.display = 'none';
+
+      // Timer
+      _recordSeconds = 0;
+      _recordTimerInt = setInterval(function() {
+        _recordSeconds++;
+        var m = Math.floor(_recordSeconds / 60);
+        var s = _recordSeconds % 60;
+        document.getElementById('recordTimer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+      }, 1000);
+    })
+    .catch(function(err) {
+      if (err.name === 'NotAllowedError') {
+        alert('Microphone permission denied. Please allow microphone access in your browser settings.');
+      } else {
+        alert('Could not access microphone: ' + err.message);
+      }
+    });
+}
+
+function stopRecording() {
+  if (_mediaRecorder && _recordingActive) {
+    _recordingActive = false;
+    clearInterval(_recordTimerInt);
+    _mediaRecorder.stop();
+    var btn = document.getElementById('recordBtn');
+    btn.classList.remove('recording');
+    btn.classList.add('processing');
+    btn.textContent = '⏳';
+    document.getElementById('recordStatus').textContent = 'Processing...';
+  }
+}
+
+function onRecordingComplete(mimeType) {
+  var blob = new Blob(_recordChunks, { type: mimeType });
+  _recordedBlob = blob;
+
+  var ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+  var sizeMB = (blob.size / (1024*1024)).toFixed(1);
+
+  document.getElementById('recordedName').textContent = 'Session recording (' + _recordSeconds + 's)';
+  document.getElementById('recordedSize').textContent = sizeMB + ' MB — compressing...';
+  document.getElementById('recordedRow').style.display = 'flex';
+  document.getElementById('recordBtn').classList.remove('processing');
+  document.getElementById('recordBtn').textContent = '🎙';
+  document.getElementById('recordStatus').textContent = 'Compressing...';
+
+  // Show compress bar
+  var compressWrap = document.getElementById('compressWrap');
+  compressWrap.style.display = 'block';
+  animateCompressBar();
+
+  // Compress: downsample to mono 22kHz using OfflineAudioContext
+  compressAudio(blob, function(compressedBlob) {
+    _recordedFile = compressedBlob;
+    var compMB = (compressedBlob.size / (1024*1024)).toFixed(1);
+    document.getElementById('recordedSize').textContent = compMB + ' MB · ready';
+    document.getElementById('recordStatus').textContent = 'Ready to analyse';
+    document.getElementById('recordTimer').textContent = formatTime(_recordSeconds);
+    compressWrap.style.display = 'none';
+    document.getElementById('compressFill').style.width = '100%';
+    checkReady();
+  });
+}
+
+function animateCompressBar() {
+  var fill = document.getElementById('compressFill');
+  var pct  = 0;
+  var iv   = setInterval(function() {
+    pct += 2;
+    fill.style.width = Math.min(pct, 90) + '%';
+    if (pct >= 90) clearInterval(iv);
+  }, 100);
+}
+
+function compressAudio(blob, callback) {
+  // Use Web Audio API to decode and re-encode at lower quality
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var arrayBuffer = e.target.result;
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    audioCtx.decodeAudioData(arrayBuffer, function(audioBuffer) {
+      // Downsample to mono 22050Hz
+      var targetRate   = 22050;
+      var origRate     = audioBuffer.sampleRate;
+      var origLength   = audioBuffer.length;
+      var targetLength = Math.ceil(origLength * targetRate / origRate);
+
+      var offlineCtx = new OfflineAudioContext(1, targetLength, targetRate);
+      var source     = offlineCtx.createBufferSource();
+      source.buffer  = audioBuffer;
+      source.connect(offlineCtx.destination);
+      source.start(0);
+
+      offlineCtx.startRendering().then(function(renderedBuffer) {
+        audioCtx.close();
+        // Convert to WAV
+        var wav = audioBufferToWav(renderedBuffer);
+        var compBlob = new Blob([wav], { type: 'audio/wav' });
+        callback(compBlob);
+      }).catch(function() {
+        audioCtx.close();
+        // Fallback — use original
+        callback(blob);
+      });
+    }, function() {
+      // Decode failed — use original
+      audioCtx.close();
+      callback(blob);
+    });
+  };
+  reader.readAsArrayBuffer(blob);
+}
+
+function audioBufferToWav(buffer) {
+  var numChannels = 1;
+  var sampleRate  = buffer.sampleRate;
+  var format      = 1; // PCM
+  var bitDepth    = 16;
+  var samples     = buffer.getChannelData(0);
+  var dataLength  = samples.length * 2;
+  var bufferLength= 44 + dataLength;
+  var arrayBuf    = new ArrayBuffer(bufferLength);
+  var view        = new DataView(arrayBuf);
+
+  function writeString(v, off, str) {
+    for (var i = 0; i < str.length; i++) v.setUint8(off + i, str.charCodeAt(i));
+  }
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * bitDepth / 8, true);
+  view.setUint16(32, numChannels * bitDepth / 8, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  var offset = 44;
+  for (var i = 0; i < samples.length; i++) {
+    var s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    offset += 2;
+  }
+  return arrayBuf;
+}
+
+function clearRecording() {
+  _recordedBlob = null;
+  _recordedFile = null;
+  _recordChunks = [];
+  _recordSeconds = 0;
+  document.getElementById('recordedRow').style.display = 'none';
+  document.getElementById('recordTimer').textContent = '0:00';
+  document.getElementById('recordStatus').textContent = 'Tap to start recording';
+  document.getElementById('compressWrap').style.display = 'none';
+  document.getElementById('compressFill').style.width = '0%';
+  checkReady();
+}
+
+function formatTime(s) {
+  var m = Math.floor(s/60);
+  return m + ':' + ((s%60)<10?'0':'') + (s%60);
+}
+
+function checkReady(){
+  var hasFile = _activeTab === 'record' ? !!_recordedFile : !!selectedFile;
+  document.getElementById('submitBtn').disabled=!(document.getElementById('ageGroup').value && hasFile);
+}
 
 function submitSession() {
-  var ageGroup=document.getElementById('ageGroup').value, objective=document.getElementById('sessionObjective').value.trim();
-  if (!_lastCoach||!ageGroup||!selectedFile) return;
-  _lastAgeGroup=ageGroup;
-  _lastDate=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var ageGroup  = document.getElementById('ageGroup').value;
+  var objective = document.getElementById('sessionObjective').value.trim();
+  var fileToUse = _activeTab === 'record' ? _recordedFile : selectedFile;
+  if (!_lastCoach || !ageGroup || !fileToUse) return;
+  _lastAgeGroup = ageGroup;
+  _lastDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   document.getElementById('upload-form').style.display='none';
   document.getElementById('upload-progress').style.display='block';
   document.getElementById('uploadError').style.display='none';
   setStep('step-upload','active');
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var base64=e.target.result.split(',')[1], mimeType=selectedFile.type||'audio/mp4';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var base64   = e.target.result.split(',')[1];
+    var mimeType = fileToUse.type || 'audio/wav';
     setStep('step-upload','done'); setStep('step-transcribe','active');
     callBackend('transcribeAndSave',
       [_lastCoach,ageGroup,objective,_sessionType,base64,mimeType,_lastDate],
@@ -1079,8 +1371,8 @@ function submitSession() {
       function(err){ showUploadError('Error: '+(err.message||String(err))); }
     );
   };
-  reader.onerror=function(){ showUploadError('Could not read the file.'); };
-  reader.readAsDataURL(selectedFile);
+  reader.onerror = function(){ showUploadError('Could not read the file.'); };
+  reader.readAsDataURL(fileToUse);
 }
 function setStep(id,s){ var el=document.getElementById(id); if(!el)return; el.classList.remove('active','done'); if(s)el.classList.add(s); }
 function showUploadError(msg){ document.getElementById('upload-progress').style.display='none'; document.getElementById('upload-form').style.display='block'; var e=document.getElementById('uploadError'); e.style.display='block'; e.textContent=msg; }

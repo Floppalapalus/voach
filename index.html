@@ -543,18 +543,35 @@ function callBackend(fnName, args, onSuccess, onFailure) {
   } else {
     // Running standalone — use fetch to the deployed Apps Script URL
     var url = BACKEND_URL || window.BACKEND_URL;
-    if (!url) { onFailure(new Error('BACKEND_URL not set. Add your Apps Script URL to the config.')); return; }
-    fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fn: fnName, args: args })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if (data.ok) { onSuccess(data.result); }
-      else { onFailure(new Error(data.error || 'Backend error')); }
-    })
-    .catch(onFailure);
+    if (!url) { onFailure(new Error('BACKEND_URL not set.')); return; }
+
+    // Use GET for read-only calls (avoids CORS preflight)
+    // Use POST for calls with large payloads (transcribeAndSave)
+    var getOnlyFns = ['getCoachNames','coachExists','getCoachHistory','getCoachRetentionData',
+                      'getDirectorDashboard','getDirectorViewForProgram','getCoachSparklineData',
+                      'getConversationLog','getAdminView','getStoredReport','generateSeasonReview'];
+    var useGet = getOnlyFns.indexOf(fnName) !== -1;
+
+    var fetchPromise;
+    if (useGet) {
+      var getUrl = url + '?fn=' + encodeURIComponent(fnName) +
+                   '&args=' + encodeURIComponent(JSON.stringify(args));
+      fetchPromise = fetch(getUrl, { method: 'GET' });
+    } else {
+      fetchPromise = fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ fn: fnName, args: args })
+      });
+    }
+
+    fetchPromise
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data.ok) { onSuccess(data.result); }
+        else { onFailure(new Error(data.error || 'Backend error')); }
+      })
+      .catch(onFailure);
   }
 }
 

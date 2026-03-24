@@ -1,7 +1,7 @@
 {
   "name": "Voach",
   "short_name": "Voach",
-  "description": "Hear yourself coach. Upload sessions, get AI-powered coaching development feedback.",
+  "description": "Hear yourself coach.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -20,10 +20,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": [
-    "sports",
-    "education",
-    "productivity"
   ]
 }

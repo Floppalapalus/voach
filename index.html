@@ -552,26 +552,47 @@ function callBackend(fnName, args, onSuccess, onFailure) {
                       'getConversationLog','getAdminView','getStoredReport','generateSeasonReview'];
     var useGet = getOnlyFns.indexOf(fnName) !== -1;
 
-    var fetchPromise;
     if (useGet) {
-      var getUrl = url + '?fn=' + encodeURIComponent(fnName) +
-                   '&args=' + encodeURIComponent(JSON.stringify(args));
-      fetchPromise = fetch(getUrl, { method: 'GET' });
+      // JSONP — bypasses CORS entirely for read-only calls
+      var cbName = 'voachCb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+      var script = document.createElement('script');
+      var timeout = setTimeout(function() {
+        document.body.removeChild(script);
+        delete window[cbName];
+        onFailure(new Error('Request timed out'));
+      }, 30000);
+      window[cbName] = function(data) {
+        clearTimeout(timeout);
+        document.body.removeChild(script);
+        delete window[cbName];
+        if (data.ok) { onSuccess(data.result); }
+        else { onFailure(new Error(data.error || 'Backend error')); }
+      };
+      script.src = url +
+        '?fn='       + encodeURIComponent(fnName) +
+        '&args='     + encodeURIComponent(JSON.stringify(args)) +
+        '&callback=' + cbName;
+      script.onerror = function() {
+        clearTimeout(timeout);
+        document.body.removeChild(script);
+        delete window[cbName];
+        onFailure(new Error('Network error'));
+      };
+      document.body.appendChild(script);
     } else {
-      fetchPromise = fetch(url, {
+      // POST with text/plain to avoid CORS preflight for write calls
+      fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ fn: fnName, args: args })
-      });
-    }
-
-    fetchPromise
+      })
       .then(function(r){ return r.json(); })
       .then(function(data){
         if (data.ok) { onSuccess(data.result); }
         else { onFailure(new Error(data.error || 'Backend error')); }
       })
       .catch(onFailure);
+    }
   }
 }
 

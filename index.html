@@ -948,6 +948,29 @@ document.addEventListener('click', function(e){
     if (dd) dd.style.display = 'none';
   }
 });
+
+// Metric info panel toggle — event delegation handles dynamically injected content
+function toggleMetricInfo(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  // Walk up the DOM to find a button with data-infoid
+  var target = e.target;
+  var infoid = null;
+  for (var i = 0; i < 4 && target; i++) {
+    if (target.getAttribute && target.getAttribute('data-infoid')) {
+      infoid = target.getAttribute('data-infoid');
+      break;
+    }
+    target = target.parentElement;
+  }
+  if (infoid) {
+    e.stopPropagation();
+    e.preventDefault();
+    toggleMetricInfo(infoid);
+  }
+});
 function checkLoginReady() {
   var name=getLoginName(), pin=document.getElementById('loginPin').value.trim();
   document.getElementById('loginBtn').disabled = !(name && pin.length>=4);

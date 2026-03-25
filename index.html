@@ -1552,8 +1552,8 @@ function buildReportHTML(report, agOverride, canvasId) {
   var rId = 'r' + _reportIdCounter;
   // Coach Card is default view
   html += '<div class="report-view-toggle">' +
-    '<button class="report-view-btn" id="btn_full_'+rId+'" onclick="switchReportView(\'full\',\''+rId+'\')">Full Report</button>' +
-    '<button class="report-view-btn active" id="btn_card_'+rId+'" onclick="switchReportView(\'card\',\''+rId+'\')">Coach Card</button>' +
+    '<button class="report-view-btn" id="btn_full_'+rId+'" onclick="switchReportView(\'full\',\''+rId+'\',event)">Full Report</button>' +
+    '<button class="report-view-btn active" id="btn_card_'+rId+'" onclick="switchReportView(\'card\',\''+rId+'\',event)">Coach Card</button>' +
     '</div>';
   html += '<div id="view_full_'+rId+'" style="display:none;">';
   var profDesc=report.profileDesc||'', ag=agOverride||report.ageGroup||'';
@@ -1688,8 +1688,96 @@ function buildReportHTML(report, agOverride, canvasId) {
   if(report.trendImprovement && report.trendImprovement.title){ html+='<div class="trend-box"><div class="insight-box-label" style="color:#8b5cf6;">📈 Pattern across sessions</div><div class="insight-box-title">'+(report.trendImprovement.title||'')+'</div>'; if(report.trendImprovement.why) html+='<div class="insight-box-why">'+report.trendImprovement.why+'</div>'; if(report.trendImprovement.quote) html+='<div class="insight-box-quote">'+report.trendImprovement.quote+'</div>'; html+='</div>'; }
   if(report.objectiveAlignment) html+='<div class="obj-box"><div class="obj-box-title">Objective Alignment</div><div class="obj-box-text">'+report.objectiveAlignment+'</div></div>';
   if(report.encouragement) html+='<div class="encourage-box">'+report.encouragement+'</div>';
+
+  // Close full report div
+  html += '</div>';
+
+  // Coach Card view
+  html += '<div id="view_card_'+rId+'">';
+  if (report.metrics && report.benchmarks) {
+    html += buildCoachCard(report, ag, rId);
+  } else {
+    html += '<div style="font-size:13px;color:#64748b;padding:16px 0;">Not enough data for coach card.</div>';
+  }
+  html += '</div>';
+
   return html;
 }
+
+function buildCoachCard(report, ag, rId) {
+  var html = '';
+  var metrics = report.metrics || {}, bms = report.benchmarks || {};
+  var mCards = [
+    {key:'openQ',    label:'Discovery Questions', unit:'/1000w', desc:'How often you guide players to think'},
+    {key:'qi',       label:'Questioning Balance',  unit:'',       desc:'How often you ask vs. tell'},
+    {key:'praise',   label:'Positive Moments',     unit:'/1000w', desc:'How often you reinforce what works'},
+    {key:'pc',       label:'Encouragement Ratio',  unit:' ratio', desc:'Your session climate score'},
+    {key:'tactical', label:'Game Language',         unit:'/1000w', desc:'How much you coach in soccer terms'}
+  ];
+
+  html += '<div class="coach-card-grid">';
+  mCards.forEach(function(m) {
+    var val  = parseFloat(metrics[m.key]) || 0;
+    var bm   = parseFloat(bms[m.key])    || 1;
+    var isOn = val >= bm, isDev = val >= bm * 0.6;
+    var cls  = isOn ? 'green-card' : isDev ? 'amber-card' : 'red-card';
+    var status = isOn ? 'On target' : isDev ? 'Developing' : 'Needs focus';
+    var iId  = 'ci_'+m.key+'_'+rId;
+    var inf  = METRIC_INFO[m.key];
+    html += '<div class="coach-card-metric '+cls+'">';
+    html += '<div class="coach-card-label">'+m.desc+'</div>';
+    html += '<div class="coach-card-val">'+val.toFixed(1)+m.unit+'</div>';
+    html += '<span class="coach-card-status">'+status+'</span>';
+    html += '<button class="metric-info-btn" data-infoid="'+iId+'">ⓘ what does this mean?</button>';
+    if (inf) {
+      var sh = inf.scale.map(function(s){
+        var bg  = s.cls==='green'?'#0a2017':s.cls==='amber'?'#1f1500':'#200a0a';
+        var col = s.cls==='green'?'#22c55e':s.cls==='amber'?'#f59e0b':'#ef4444';
+        return '<div class="metric-info-scale-item" style="background:'+bg+';color:'+col+';">'+s.label+'<br>'+s.range+(inf.unit||'')+'</div>';
+      }).join('');
+      html += '<div class="metric-info-panel" id="'+iId+'">';
+      html += '<div class="metric-info-why">'+inf.why+'</div>';
+      html += '<div class="metric-info-scale">'+sh+'</div>';
+      html += '<div class="metric-info-try"><b>Try this</b>'+inf.try+'</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Focus cue
+  if (report.focusArea && report.focusArea.title) {
+    html += '<div class="coach-card-cue">';
+    html += '<b>Your focus for next session: '+report.focusArea.title+'</b>';
+    if (report.focusArea.why)   html += report.focusArea.why;
+    if (report.focusArea.quote) html += '<div style="color:#3b82f6;margin-top:6px;font-style:italic;">Try: &ldquo;'+report.focusArea.quote+'&rdquo;</div>';
+    html += '</div>';
+  }
+
+  // Grade badge
+  var gc2 = {A:{bg:'#0a2017',col:'#22c55e'},B:{bg:'#1e3a5f',col:'#93c5fd'},C:{bg:'#1f1500',col:'#f59e0b'},D:{bg:'#200a0a',col:'#ef4444'}}[report.grade||'B']||{bg:'#1e3a5f',col:'#93c5fd'};
+  html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:'+gc2.bg+';border-radius:10px;margin-bottom:8px;">';
+  html += '<div style="font-size:32px;font-weight:700;color:'+gc2.col+';">'+( report.grade||'B')+'</div>';
+  html += '<div>';
+  if (report.profileLabel) html += '<div style="font-size:13px;font-weight:600;color:#f8fafc;">'+report.profileLabel+'</div>';
+  if (report.wentWell)     html += '<div style="font-size:12px;color:#64748b;margin-top:3px;">'+report.wentWell.substring(0,120)+'...</div>';
+  html += '</div></div>';
+
+  return html;
+}
+
+function switchReportView(view, rId, evt) {
+  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+  var full = document.getElementById('view_full_'+rId);
+  var card = document.getElementById('view_card_'+rId);
+  var btnF = document.getElementById('btn_full_'+rId);
+  var btnC = document.getElementById('btn_card_'+rId);
+  if (full) full.style.display = view==='full' ? 'block' : 'none';
+  if (card) card.style.display = view==='card' ? 'block' : 'none';
+  if (btnF) btnF.classList.toggle('active', view==='full');
+  if (btnC) btnC.classList.toggle('active', view==='card');
+}
+
 function buildQTier(label,count,total,cls){
   return '<div class="q-tier-row"><div class="q-tier-label">'+label+'</div><div class="q-tier-bar-wrap"><div class="q-tier-bar '+cls+'" style="width:'+Math.round((count/total)*100)+'%"></div></div><div class="q-tier-count">'+count+'</div></div>';
 }

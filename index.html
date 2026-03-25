@@ -275,7 +275,40 @@
   .t3-criterion{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:3px;}
   .t3-evidence{font-size:12px;color:#64748b;line-height:1.5;}
   .t3-sub{font-size:11px;color:#334155;margin-top:2px;}
+  /* Metric info tooltips */
+  .metric-info-btn{background:none;border:none;color:#334155;cursor:pointer;font-size:11px;padding:0 4px;line-height:1;vertical-align:middle;margin-left:4px;}
+  .metric-info-btn:hover{color:#93c5fd;}
+  .metric-info-panel{display:none;background:#0f172a;border:1px solid #1e3a5f;border-radius:10px;padding:12px 14px;margin-top:8px;font-size:12px;color:#94a3b8;line-height:1.6;}
+  .metric-info-panel.open{display:block;}
+  .metric-info-why{color:#94a3b8;margin-bottom:6px;}
+  .metric-info-scale{display:flex;gap:4px;margin-bottom:6px;}
+  .metric-info-scale-item{flex:1;border-radius:6px;padding:5px 4px;text-align:center;font-size:10px;font-weight:600;}
+  .metric-info-try{background:#1e293b;border-radius:6px;padding:8px 10px;font-size:11px;color:#64748b;line-height:1.5;}
+  .metric-info-try b{color:#93c5fd;display:block;margin-bottom:2px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;}
+  /* Coach card toggle */
+  .report-view-toggle{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1px solid #1e3a5f;margin-bottom:16px;width:100%;}
+  .report-view-btn{flex:1;padding:8px 0;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#0f172a;color:#475569;transition:all 0.15s;}
+  .report-view-btn.active{background:#1e3a5f;color:#93c5fd;}
+  /* Simplified coach card */
+  .coach-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .coach-card-metric{border-radius:12px;padding:14px 12px;position:relative;}
+  .coach-card-metric.green-card{background:#0a2017;border:1px solid #22c55e;}
+  .coach-card-metric.amber-card{background:#1f1500;border:1px solid #f59e0b;}
+  .coach-card-metric.red-card{background:#200a0a;border:1px solid #ef4444;}
+  .coach-card-label{font-size:11px;color:#64748b;margin-bottom:6px;line-height:1.3;}
+  .coach-card-val{font-size:20px;font-weight:700;margin-bottom:4px;}
+  .coach-card-metric.green-card .coach-card-val{color:#22c55e;}
+  .coach-card-metric.amber-card .coach-card-val{color:#f59e0b;}
+  .coach-card-metric.red-card .coach-card-val{color:#ef4444;}
+  .coach-card-status{font-size:10px;font-weight:700;border-radius:4px;padding:2px 7px;display:inline-block;}
+  .coach-card-metric.green-card .coach-card-status{background:#0d3321;color:#22c55e;}
+  .coach-card-metric.amber-card .coach-card-status{background:#2d1e00;color:#f59e0b;}
+  .coach-card-metric.red-card .coach-card-status{background:#2d0a0a;color:#ef4444;}
+  .coach-card-cue{background:#1e293b;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#94a3b8;line-height:1.6;}
+  .coach-card-cue b{color:#f8fafc;display:block;margin-bottom:4px;font-size:13px;}
+
   /* Goals + Reports panels */
+
   .goal-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e293b;}
   .goal-row:last-child{border-bottom:none;}
   .goal-coach{font-size:13px;font-weight:600;color:#f8fafc;flex:1;}
@@ -684,6 +717,39 @@ var PROGRAMS = ['Recreation','Challenge','Juniors','Classic','NPL','ECNL-RL','EC
 var PIE_COLORS = ['#3b82f6','#64748b','#22c55e','#f59e0b','#ef4444'];
 var PIE_KEYS   = ['openQ','closedQ','praise','instructions','corrections'];
 var PIE_LABELS = {openQ:'Open Questions',closedQ:'Closed Questions',praise:'Praise',instructions:'Instructions',corrections:'Corrections'};
+
+var METRIC_INFO = {
+  openQ: {
+    why: 'Every question you ask instead of telling activates player thinking. High scores mean more players solving problems themselves.',
+    scale: [{label:'Developing',range:'< 2',cls:'red'},{label:'Growing',range:'2–4',cls:'amber'},{label:'On target',range:'4+',cls:'green'}],
+    try: 'Before speaking, pause and ask "What do you see?" — count how many times you do this.',
+    unit: '/1000w'
+  },
+  qi: {
+    why: 'Measures your ask-vs-tell balance. A 0.5 ratio means two instructions for every question. Research shows players retain more when they discover solutions.',
+    scale: [{label:'Telling-heavy',range:'< 0.4',cls:'red'},{label:'Balanced',range:'0.4–0.7',cls:'amber'},{label:'Questioning',range:'0.7+',cls:'green'}],
+    try: 'Replace one instruction per training block with a question: What would happen if...?',
+    unit: ''
+  },
+  praise: {
+    why: 'Specific praise ("great first touch") reinforces the behaviour and shows players what good looks like — more powerful than correcting what is wrong.',
+    scale: [{label:'Low',range:'< 3',cls:'red'},{label:'Building',range:'3–6',cls:'amber'},{label:'Strong',range:'6+',cls:'green'}],
+    try: 'Make your praise specific — name the player, name the action: "Mason, great shape on that receive."',
+    unit: '/1000w'
+  },
+  pc: {
+    why: 'Players in positive environments take more risks and learn faster. The NCFC framework targets 3:1 praise-to-correction. Below 2:1 creates anxiety.',
+    scale: [{label:'Correction-heavy',range:'< 2',cls:'red'},{label:'Developing',range:'2–3',cls:'amber'},{label:'Positive',range:'3+',cls:'green'}],
+    try: 'For every correction, find three things to praise before the next one.',
+    unit: ' ratio'
+  },
+  tactical: {
+    why: 'Using game terminology (Phase of Play, Main Principle, Player Actions) creates cognitive links players access during matches. Training language should mirror the game.',
+    scale: [{label:'Low',range:'< 5',cls:'red'},{label:'Building',range:'5–10',cls:'amber'},{label:'Strong',range:'10+',cls:'green'}],
+    try: 'Reference your session Main Principle by name at least once per training block.',
+    unit: '/1000w'
+  }
+};
 
 var METRIC_DEFS = [
   {key:'openQ',    label:'Discovery Questions', shortLabel:'Discovery Q',    unit:'/1000w',max:14},
@@ -1480,6 +1546,13 @@ function submitFeedback(rowNum) {
 // ── Report HTML ───────────────────────────────────────────
 function buildReportHTML(report, agOverride, canvasId) {
   var html='', grade=report.grade||'B', profLabel=report.profileLabel||'Developing Player-Centred Coach';
+  // View toggle
+  var rId = 'rpt_' + Date.now();
+  html += '<div class="report-view-toggle">' +
+    '<button class="report-view-btn active" id="btn_full_'+rId+'" onclick="switchReportView(\'full\',\''+rId+'\')">Full Report</button>' +
+    '<button class="report-view-btn" id="btn_card_'+rId+'" onclick="switchReportView(\'card\',\''+rId+'\')">Coach Card</button>' +
+    '</div>';
+  html += '<div id="view_full_'+rId+'">';
   var profDesc=report.profileDesc||'', ag=agOverride||report.ageGroup||'';
   var sType=report.sessionType||'Training';
   var badgeType=sType==='Training'?'training':sType==='Team Meeting'?'meeting':'game';
@@ -1531,12 +1604,28 @@ function buildReportHTML(report, agOverride, canvasId) {
       var stTxt=isOn?'On target for ':isDev?'Developing — target ':'Below target — aim for ';
       var trend=report.trends?report.trends[m.key]:null;
       var tH=trend==='up'?'<span class="trend-arrow" style="color:#22c55e">↑</span>':trend==='down'?'<span class="trend-arrow" style="color:#ef4444">↓</span>':'<span class="trend-arrow" style="color:#334155">→</span>';
-      html+='<div class="metric-block"><div class="metric-top"><div class="metric-name">'+m.label+'</div><div class="metric-val">'+val.toFixed(1)+m.unit+'</div>'+tH+'</div>';
+      var infoId = 'info_'+m.key+'_'+Date.now()+'_'+Math.floor(Math.random()*1000);
+      var inf = METRIC_INFO[m.key];
+      html+='<div class="metric-block">';
+      html+='<div class="metric-top"><div class="metric-name">'+m.label+'<button class="metric-info-btn" onclick="toggleMetricInfo(\''+infoId+'\')">ⓘ</button></div><div class="metric-val">'+val.toFixed(1)+m.unit+'</div>'+tH+'</div>';
       html+='<div class="metric-bar-wrap"><div class="metric-bar '+barCls+'" style="width:'+pct.toFixed(1)+'%"></div><div class="bm-tick" style="left:'+bmPct.toFixed(1)+'%"></div>';
       if(elPct) html+='<div class="elite-tick" style="left:'+elPct.toFixed(1)+'%"></div>';
       html+='</div><div class="metric-target '+stCls+'">'+stTxt+bm.toFixed(1)+m.unit+(ag?' for '+ag:'');
       if(elVal) html+='<span class="elite-label">Top 5%: '+elVal.toFixed(1)+'</span>';
-      html+='</div></div>';
+      html+='</div>';
+      if (inf) {
+        var scaleHtml = inf.scale.map(function(s){
+          var bg=s.cls==='green'?'#0a2017':s.cls==='amber'?'#1f1500':'#200a0a';
+          var col=s.cls==='green'?'#22c55e':s.cls==='amber'?'#f59e0b':'#ef4444';
+          return '<div class="metric-info-scale-item" style="background:'+bg+';color:'+col+';">'+s.label+'<br>'+s.range+(inf.unit||'')+'</div>';
+        }).join('');
+        html+='<div class="metric-info-panel" id="'+infoId+'">';
+        html+='<div class="metric-info-why">'+inf.why+'</div>';
+        html+='<div class="metric-info-scale">'+scaleHtml+'</div>';
+        html+='<div class="metric-info-try"><b>Try this</b>'+inf.try+'</div>';
+        html+='</div>';
+      }
+      html+='</div>';
     });
     html+='</div>';
   }

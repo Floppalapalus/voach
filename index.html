@@ -1544,15 +1544,18 @@ function submitFeedback(rowNum) {
 }
 
 // ── Report HTML ───────────────────────────────────────────
+var _reportIdCounter = 0;
 function buildReportHTML(report, agOverride, canvasId) {
   var html='', grade=report.grade||'B', profLabel=report.profileLabel||'Developing Player-Centred Coach';
-  // View toggle
-  var rId = 'rpt_' + Date.now();
+  // Use incrementing counter so IDs are always unique and stable
+  _reportIdCounter++;
+  var rId = 'r' + _reportIdCounter;
+  // Coach Card is default view
   html += '<div class="report-view-toggle">' +
-    '<button class="report-view-btn active" id="btn_full_'+rId+'" onclick="switchReportView(\'full\',\''+rId+'\')">Full Report</button>' +
-    '<button class="report-view-btn" id="btn_card_'+rId+'" onclick="switchReportView(\'card\',\''+rId+'\')">Coach Card</button>' +
+    '<button class="report-view-btn" id="btn_full_'+rId+'" onclick="switchReportView(\'full\',\''+rId+'\')">Full Report</button>' +
+    '<button class="report-view-btn active" id="btn_card_'+rId+'" onclick="switchReportView(\'card\',\''+rId+'\')">Coach Card</button>' +
     '</div>';
-  html += '<div id="view_full_'+rId+'">';
+  html += '<div id="view_full_'+rId+'" style="display:none;">';
   var profDesc=report.profileDesc||'', ag=agOverride||report.ageGroup||'';
   var sType=report.sessionType||'Training';
   var badgeType=sType==='Training'?'training':sType==='Team Meeting'?'meeting':'game';
@@ -1604,10 +1607,10 @@ function buildReportHTML(report, agOverride, canvasId) {
       var stTxt=isOn?'On target for ':isDev?'Developing — target ':'Below target — aim for ';
       var trend=report.trends?report.trends[m.key]:null;
       var tH=trend==='up'?'<span class="trend-arrow" style="color:#22c55e">↑</span>':trend==='down'?'<span class="trend-arrow" style="color:#ef4444">↓</span>':'<span class="trend-arrow" style="color:#334155">→</span>';
-      var infoId = 'info_'+m.key+'_'+Date.now()+'_'+Math.floor(Math.random()*1000);
+      var infoId = 'info_'+m.key+'_'+rId;
       var inf = METRIC_INFO[m.key];
       html+='<div class="metric-block">';
-      html+='<div class="metric-top"><div class="metric-name">'+m.label+'<button class="metric-info-btn" onclick="toggleMetricInfo(\''+infoId+'\')">ⓘ</button></div><div class="metric-val">'+val.toFixed(1)+m.unit+'</div>'+tH+'</div>';
+      html+='<div class="metric-top"><div class="metric-name">'+m.label+'<button class="metric-info-btn" data-infoid="'+infoId+'">ⓘ</button></div><div class="metric-val">'+val.toFixed(1)+m.unit+'</div>'+tH+'</div>';
       html+='<div class="metric-bar-wrap"><div class="metric-bar '+barCls+'" style="width:'+pct.toFixed(1)+'%"></div><div class="bm-tick" style="left:'+bmPct.toFixed(1)+'%"></div>';
       if(elPct) html+='<div class="elite-tick" style="left:'+elPct.toFixed(1)+'%"></div>';
       html+='</div><div class="metric-target '+stCls+'">'+stTxt+bm.toFixed(1)+m.unit+(ag?' for '+ag:'');

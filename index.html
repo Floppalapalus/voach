@@ -275,16 +275,27 @@
   .t3-criterion{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:3px;}
   .t3-evidence{font-size:12px;color:#64748b;line-height:1.5;}
   .t3-sub{font-size:11px;color:#334155;margin-top:2px;}
-  /* Metric info tooltips */
+  /* Metric info button */
   .metric-info-btn{background:none;border:none;color:#334155;cursor:pointer;font-size:11px;padding:0 4px;line-height:1;vertical-align:middle;margin-left:4px;}
   .metric-info-btn:hover{color:#93c5fd;}
-  .metric-info-panel{display:none;background:#0f172a;border:1px solid #1e3a5f;border-radius:10px;padding:12px 14px;margin-top:8px;font-size:12px;color:#94a3b8;line-height:1.6;}
-  .metric-info-panel.open{display:block;}
-  .metric-info-why{color:#94a3b8;margin-bottom:6px;}
-  .metric-info-scale{display:flex;gap:4px;margin-bottom:6px;}
-  .metric-info-scale-item{flex:1;border-radius:6px;padding:5px 4px;text-align:center;font-size:10px;font-weight:600;}
-  .metric-info-try{background:#1e293b;border-radius:6px;padding:8px 10px;font-size:11px;color:#64748b;line-height:1.5;}
-  .metric-info-try b{color:#93c5fd;display:block;margin-bottom:2px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;}
+  /* Hide inline panels — content is now shown in modal */
+  .metric-info-panel{display:none !important;}
+  /* Metric info modal */
+  .metric-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;display:flex;align-items:flex-end;justify-content:center;padding:0;}
+  .metric-modal-sheet{background:#1e293b;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;box-sizing:border-box;animation:slideUp 0.25s ease;}
+  @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .metric-modal-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#475569;margin-bottom:6px;}
+  .metric-modal-title{font-size:18px;font-weight:700;color:#f8fafc;margin-bottom:12px;}
+  .metric-modal-why{font-size:14px;color:#94a3b8;line-height:1.7;margin-bottom:16px;}
+  .metric-modal-scale{display:flex;gap:8px;margin-bottom:16px;}
+  .metric-modal-scale-item{flex:1;border-radius:10px;padding:10px 6px;text-align:center;}
+  .metric-modal-scale-label{font-size:10px;font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .metric-modal-scale-val{font-size:13px;font-weight:700;}
+  .metric-modal-try{background:#0f172a;border-radius:12px;padding:14px 16px;margin-bottom:20px;}
+  .metric-modal-try-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#3b82f6;display:block;margin-bottom:6px;}
+  .metric-modal-try-text{font-size:13px;color:#94a3b8;line-height:1.6;}
+  .metric-modal-close{width:100%;padding:14px;background:#0f172a;border:none;border-radius:12px;color:#64748b;font-size:14px;font-weight:600;cursor:pointer;}
+  .metric-modal-close:active{background:#1e293b;}
   /* Coach card toggle */
   .report-view-toggle{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1px solid #1e3a5f;margin-bottom:16px;width:100%;}
   .report-view-btn{flex:1;padding:8px 0;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#0f172a;color:#475569;transition:all 0.15s;}
@@ -949,13 +960,65 @@ document.addEventListener('click', function(e){
   }
 });
 
-// Metric info panel toggle — event delegation handles dynamically injected content
-function toggleMetricInfo(id) {
-  var el = document.getElementById(id);
-  if (el) el.classList.toggle('open');
+// Metric info modal — shows one at a time as a bottom sheet
+function showMetricModal(infoid) {
+  // Remove any existing modal
+  var existing = document.getElementById('metricModal');
+  if (existing) existing.remove();
+
+  // Find the data for this metric from METRIC_INFO
+  // infoid format: 'info_openQ_r1' or 'ci_openQ_r1'
+  var parts = infoid.split('_');
+  var metricKey = parts[1]; // e.g. 'openQ', 'qi', 'praise', 'pc', 'tactical'
+  var inf = window.METRIC_INFO && METRIC_INFO[metricKey];
+  if (!inf) return;
+
+  var metricLabels = {
+    openQ:'Discovery Questions', qi:'Questioning Balance',
+    praise:'Positive Moments', pc:'Encouragement Ratio', tactical:'Game Language'
+  };
+  var title = metricLabels[metricKey] || metricKey;
+
+  var scaleHtml = (inf.scale || []).map(function(s) {
+    var bg  = s.cls==='green'?'#0a2017':s.cls==='amber'?'#1f1500':'#200a0a';
+    var col = s.cls==='green'?'#22c55e':s.cls==='amber'?'#f59e0b':'#ef4444';
+    return '<div class="metric-modal-scale-item" style="background:'+bg+';border:1px solid '+col+'20;">' +
+           '<span class="metric-modal-scale-label" style="color:'+col+';">'+s.label+'</span>' +
+           '<span class="metric-modal-scale-val" style="color:'+col+';">'+s.range+(inf.unit||'')+'</span>' +
+           '</div>';
+  }).join('');
+
+  var overlay = document.createElement('div');
+  overlay.id = 'metricModal';
+  overlay.className = 'metric-modal-overlay';
+  overlay.innerHTML =
+    '<div class="metric-modal-sheet">' +
+    '<div class="metric-modal-label">What does this mean?</div>' +
+    '<div class="metric-modal-title">'+title+'</div>' +
+    '<div class="metric-modal-why">'+inf.why+'</div>' +
+    '<div class="metric-modal-scale">'+scaleHtml+'</div>' +
+    '<div class="metric-modal-try">' +
+    '<span class="metric-modal-try-label">Try this next session</span>' +
+    '<span class="metric-modal-try-text">'+inf.try+'</span>' +
+    '</div>' +
+    '<button class="metric-modal-close" onclick="closeMetricModal()">Got it</button>' +
+    '</div>';
+
+  // Close on overlay tap (outside sheet)
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeMetricModal();
+  });
+
+  document.body.appendChild(overlay);
 }
+
+function closeMetricModal() {
+  var el = document.getElementById('metricModal');
+  if (el) el.remove();
+}
+
+// Event delegation for info buttons
 document.addEventListener('click', function(e) {
-  // Walk up the DOM to find a button with data-infoid
   var target = e.target;
   var infoid = null;
   for (var i = 0; i < 4 && target; i++) {
@@ -968,7 +1031,7 @@ document.addEventListener('click', function(e) {
   if (infoid) {
     e.stopPropagation();
     e.preventDefault();
-    toggleMetricInfo(infoid);
+    showMetricModal(infoid);
   }
 });
 function checkLoginReady() {

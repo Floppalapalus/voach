@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Voach — Upload your coaching sessions. Get AI-powered feedback on your questioning, praise, and game language. Hear yourself coach.">
+<title>Voach — Hear yourself coach.</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#f1f5f9;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+
+/* Nav */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;max-width:1080px;margin:0 auto;}
+.nav-logo{font-size:22px;font-weight:800;color:#f8fafc;letter-spacing:-0.5px;}
+.nav-logo span{color:#3b82f6;}
+.nav-cta{background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;}
+.nav-cta:hover{background:#2563eb;}
+
+/* Hero */
+.hero{max-width:680px;margin:0 auto;padding:60px 24px 48px;text-align:center;}
+.hero-badge{display:inline-block;background:#1e3a5f;color:#93c5fd;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;margin-bottom:24px;letter-spacing:0.5px;}
+.hero-title{font-size:clamp(36px,8vw,60px);font-weight:800;line-height:1.1;color:#f8fafc;margin-bottom:20px;letter-spacing:-1px;}
+.hero-title span{color:#3b82f6;}
+.hero-sub{font-size:18px;color:#64748b;line-height:1.7;margin-bottom:36px;max-width:520px;margin-left:auto;margin-right:auto;}
+.hero-cta{display:inline-block;background:#3b82f6;color:#fff;border:none;border-radius:14px;padding:18px 36px;font-size:17px;font-weight:700;cursor:pointer;margin-bottom:12px;width:100%;max-width:320px;}
+.hero-cta:hover{background:#2563eb;}
+.hero-note{font-size:13px;color:#334155;}
+
+/* Phone mockup */
+.mockup-wrap{max-width:360px;margin:48px auto;padding:0 24px;}
+.mockup{background:#1e293b;border-radius:28px;padding:20px;border:1px solid #334155;box-shadow:0 32px 80px rgba(0,0,0,0.5);}
+.mockup-bar{display:flex;gap:8px;margin-bottom:16px;}
+.mockup-dot{width:10px;height:10px;border-radius:50%;background:#334155;}
+.mockup-screen{background:#0f172a;border-radius:16px;padding:16px;font-size:13px;}
+.mockup-header{font-size:11px;font-weight:700;letter-spacing:1px;color:#475569;margin-bottom:12px;}
+.mockup-metric{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#1e293b;border-radius:8px;margin-bottom:6px;}
+.mockup-metric-name{color:#94a3b8;font-size:12px;}
+.mockup-metric-val{font-weight:700;font-size:13px;}
+.mockup-metric.green .mockup-metric-val{color:#22c55e;}
+.mockup-metric.amber .mockup-metric-val{color:#f59e0b;}
+.mockup-metric.red   .mockup-metric-val{color:#ef4444;}
+.mockup-focus{background:#1e3a5f;border:1px solid #3b82f6;border-radius:10px;padding:10px 12px;margin-top:10px;}
+.mockup-focus-label{font-size:10px;font-weight:700;color:#3b82f6;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;}
+.mockup-focus-text{font-size:12px;color:#93c5fd;}
+
+/* How it works */
+.section{max-width:680px;margin:0 auto;padding:64px 24px;}
+.section-label{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3b82f6;margin-bottom:12px;}
+.section-title{font-size:clamp(28px,5vw,38px);font-weight:800;color:#f8fafc;margin-bottom:16px;letter-spacing:-0.5px;}
+.section-sub{font-size:16px;color:#64748b;line-height:1.7;margin-bottom:40px;}
+.steps{display:flex;flex-direction:column;gap:20px;}
+.step{display:flex;gap:16px;align-items:flex-start;}
+.step-num{width:36px;height:36px;border-radius:10px;background:#1e3a5f;color:#3b82f6;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-title{font-size:16px;font-weight:700;color:#f8fafc;margin-bottom:4px;}
+.step-body{font-size:14px;color:#64748b;line-height:1.6;}
+
+/* Metrics */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;}
+.metric-card{background:#1e293b;border-radius:14px;padding:16px;}
+.metric-card-icon{font-size:22px;margin-bottom:8px;}
+.metric-card-title{font-size:14px;font-weight:700;color:#f8fafc;margin-bottom:4px;}
+.metric-card-body{font-size:12px;color:#475569;line-height:1.5;}
+
+/* Pricing */
+.pricing-card{background:#1e293b;border:1px solid #1e3a5f;border-radius:20px;padding:32px 24px;text-align:center;max-width:360px;margin:0 auto;}
+.pricing-badge{background:#1e3a5f;color:#3b82f6;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;display:inline-block;margin-bottom:20px;}
+.pricing-price{font-size:48px;font-weight:800;color:#f8fafc;letter-spacing:-1px;}
+.pricing-period{font-size:15px;color:#475569;margin-bottom:8px;}
+.pricing-trial{font-size:14px;color:#22c55e;font-weight:700;margin-bottom:24px;}
+.pricing-features{list-style:none;text-align:left;margin-bottom:28px;}
+.pricing-features li{font-size:14px;color:#94a3b8;padding:6px 0;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px;}
+.pricing-features li::before{content:"✓";color:#22c55e;font-weight:700;flex-shrink:0;}
+.pricing-cta{width:100%;padding:16px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;}
+.pricing-cta:hover{background:#2563eb;}
+
+/* Social proof */
+.proof-grid{display:flex;flex-direction:column;gap:14px;}
+.proof-card{background:#1e293b;border-radius:14px;padding:18px 20px;}
+.proof-text{font-size:14px;color:#94a3b8;line-height:1.7;margin-bottom:10px;font-style:italic;}
+.proof-author{font-size:12px;font-weight:700;color:#64748b;}
+
+/* Framework */
+.framework-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.framework-badge{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:6px 12px;font-size:12px;color:#64748b;}
+
+/* Footer */
+.footer{border-top:1px solid #1e293b;padding:32px 24px;text-align:center;font-size:13px;color:#334155;max-width:680px;margin:0 auto;}
+.footer a{color:#475569;}
+
+/* Divider */
+.divider{height:1px;background:#1e293b;max-width:680px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">V<span>oach</span></div>
+  <a href="./index.html" class="nav-cta">Open app →</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">US Soccer Framework · AI-powered · $9.99/month</div>
+  <h1 class="hero-title">Hear yourself <span>coach.</span></h1>
+  <p class="hero-sub">Upload a session recording. Get AI-powered feedback on your questioning, praise, and game language — benchmarked against the US Soccer Player Development Framework.</p>
+  <a href="./index.html" class="hero-cta">Start your free 14-day trial →</a>
+  <p class="hero-note">No credit card required to start · Cancel any time</p>
+</section>
+
+<!-- Phone mockup -->
+<div class="mockup-wrap">
+  <div class="mockup">
+    <div class="mockup-bar">
+      <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
+    </div>
+    <div class="mockup-screen">
+      <div class="mockup-header">COACH CARD · MAR 25, 2026</div>
+      <div class="mockup-metric green"><span class="mockup-metric-name">Discovery Questions</span><span class="mockup-metric-val">On target ✓</span></div>
+      <div class="mockup-metric green"><span class="mockup-metric-name">Questioning Balance</span><span class="mockup-metric-val">On target ✓</span></div>
+      <div class="mockup-metric amber"><span class="mockup-metric-name">Positive Moments</span><span class="mockup-metric-val">Developing</span></div>
+      <div class="mockup-metric red">  <span class="mockup-metric-name">Encouragement Ratio</span><span class="mockup-metric-val">Needs focus</span></div>
+      <div class="mockup-metric green"><span class="mockup-metric-name">Game Language</span><span class="mockup-metric-val">On target ✓</span></div>
+      <div class="mockup-focus">
+        <div class="mockup-focus-label">Your focus for next session</div>
+        <div class="mockup-focus-text">For every correction, find three things to praise first.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- How it works -->
+<section class="section">
+  <div class="section-label">How it works</div>
+  <h2 class="section-title">Three steps to better coaching</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><div class="step-title">Record your session</div><div class="step-body">Use the built-in recorder during training or a game. Or upload an existing audio file — MP3, M4A, WAV, or MOV.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><div class="step-title">Get your AI report</div><div class="step-body">In 2–5 minutes, Claude analyses your transcript and generates a personalised feedback report — what went well, your growth edge, and a specific thing to try next session.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><div class="step-title">Track your development</div><div class="step-body">Every session adds to your season arc. Watch your Q:I ratio improve. Hit personal bests. Get a Monday digest that shows you exactly where you stand.</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- What gets measured -->
+<section class="section">
+  <div class="section-label">What gets measured</div>
+  <h2 class="section-title">Six behaviours that define player-centred coaching</h2>
+  <p class="section-sub">Every metric maps directly to the US Soccer Player Development Framework and NCFC Youth guidelines.</p>
+  <div class="metrics-grid">
+    <div class="metric-card"><div class="metric-card-icon">🔍</div><div class="metric-card-title">Discovery Questions</div><div class="metric-card-body">How often you ask players to think for themselves instead of telling them the answer.</div></div>
+    <div class="metric-card"><div class="metric-card-icon">⚖️</div><div class="metric-card-title">Questioning Balance</div><div class="metric-card-body">Your ask-vs-tell ratio. The goal is more questions, fewer instructions.</div></div>
+    <div class="metric-card"><div class="metric-card-icon">👏</div><div class="metric-card-title">Positive Moments</div><div class="metric-card-body">How often you reinforce what's working with specific, named praise.</div></div>
+    <div class="metric-card"><div class="metric-card-icon">🌡️</div><div class="metric-card-title">Session Climate</div><div class="metric-card-body">Your praise-to-correction balance. Players learn faster in positive environments.</div></div>
+    <div class="metric-card"><div class="metric-card-icon">⚽</div><div class="metric-card-title">Game Language</div><div class="metric-card-body">How much you coach in game terminology — Phase of Play, Player Actions, Main Principle.</div></div>
+    <div class="metric-card"><div class="metric-card-icon">🏆</div><div class="metric-card-title">Teaching Score</div><div class="metric-card-body">A composite quality indicator across all six 3T Teaching Assessment criteria.</div></div>
+  </div>
+  <div class="framework-badges" style="margin-top:24px;">
+    <div class="framework-badge">US Soccer PDM</div>
+    <div class="framework-badge">NCFC Youth Framework</div>
+    <div class="framework-badge">3T Teaching Assessment</div>
+    <div class="framework-badge">Guided Discovery</div>
+    <div class="framework-badge">Player-Centred Coaching</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Pricing -->
+<section class="section">
+  <div class="section-label">Pricing</div>
+  <h2 class="section-title" style="text-align:center;">Simple, honest pricing</h2>
+  <div class="pricing-card" style="margin-top:32px;">
+    <div class="pricing-badge">Individual coach</div>
+    <div class="pricing-price">$9.99</div>
+    <div class="pricing-period">per month</div>
+    <div class="pricing-trial">14-day free trial · no card required to start</div>
+    <ul class="pricing-features">
+      <li>Unlimited session uploads</li>
+      <li>AI-powered behaviour analysis</li>
+      <li>Personal bests + streak tracking</li>
+      <li>Season arc + annual review PDF</li>
+      <li>Weekly coaching digest email</li>
+      <li>Coach Card + Full Report view</li>
+      <li>In-app session recording</li>
+      <li>Milestone share cards</li>
+    </ul>
+    <a href="./index.html" class="pricing-cta">Start free trial →</a>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Footer -->
+<footer class="footer">
+  <p style="font-size:18px;font-weight:800;color:#f8fafc;margin-bottom:8px;">Voach</p>
+  <p style="margin-bottom:16px;">Hear yourself coach.</p>
+  <p><a href="./index.html">Open app</a> · Built for youth soccer coaches · US Soccer PDM aligned</p>
+</footer>
+
+</body>
+</html>

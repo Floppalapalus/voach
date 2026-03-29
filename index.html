@@ -275,7 +275,130 @@
   .t3-criterion{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:3px;}
   .t3-evidence{font-size:12px;color:#64748b;line-height:1.5;}
   .t3-sub{font-size:11px;color:#334155;margin-top:2px;}
+  /* Connection insight dashboard */
+  .insight-dashboard{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
+  .week-compare-card{background:#1e293b;border-radius:16px;padding:18px;border:1px solid #334155;}
+  .week-compare-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .week-compare-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;}
+  .week-compare-badge{font-size:10px;font-weight:700;background:#1e3a5f;color:#3b82f6;padding:3px 10px;border-radius:20px;}
+  .week-metric-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #0f172a;}
+  .week-metric-row:last-child{border-bottom:none;}
+  .week-metric-label{font-size:12px;color:#64748b;flex:1;}
+  .week-metric-vals{display:flex;align-items:center;gap:8px;}
+  .week-metric-prev{font-size:12px;color:#334155;text-decoration:line-through;}
+  .week-metric-curr{font-size:13px;font-weight:700;color:#f8fafc;}
+  .week-metric-delta{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;}
+  .delta-up{background:#0a2017;color:#22c55e;}
+  .delta-down{background:#200a0a;color:#ef4444;}
+  .delta-flat{background:#1e293b;color:#475569;}
+  /* Connection insight */
+  .connection-card{background:#1e3a5f;border:1px solid #3b82f6;border-radius:16px;padding:18px;}
+  .connection-header{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#3b82f6;margin-bottom:10px;}
+  .connection-insight{font-size:14px;color:#f8fafc;line-height:1.7;margin-bottom:8px;}
+  .connection-insight span{color:#93c5fd;font-weight:700;}
+  /* Action card */
+  .action-card{background:#0f172a;border:1px solid #1e3a5f;border-radius:16px;padding:18px;}
+  .action-header{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f59e0b;margin-bottom:8px;}
+  .action-title{font-size:14px;font-weight:700;color:#f8fafc;margin-bottom:6px;}
+  .action-body{font-size:13px;color:#64748b;line-height:1.6;}
+  /* Trend chart */
+  .trend-card{background:#1e293b;border-radius:16px;padding:18px;border:1px solid #334155;}
+  .trend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .trend-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;}
+  .trend-legend{display:flex;gap:12px;}
+  .trend-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#475569;}
+  .trend-legend-dot{width:8px;height:8px;border-radius:50%;}
+
+  /* Connection insight dashboard */
+  .insight-dashboard{margin-bottom:20px;}
+  .insight-section-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#475569;margin-bottom:10px;}
+  .week-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .week-col{background:#1e293b;border-radius:12px;padding:12px 14px;}
+  .week-col-label{font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#475569;margin-bottom:8px;}
+  .week-metric{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #0f172a;font-size:12px;}
+  .week-metric:last-child{border-bottom:none;}
+  .week-metric-name{color:#64748b;}
+  .week-metric-val{font-weight:700;}
+  .week-metric-val.up{color:#22c55e;}
+  .week-metric-val.down{color:#ef4444;}
+  .week-metric-val.flat{color:#94a3b8;}
+  .connection-card{background:#1e3a5f;border:1px solid #3b82f6;border-radius:14px;padding:16px;margin-bottom:12px;}
+  .connection-card-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#3b82f6;margin-bottom:8px;}
+  .connection-insight-row{font-size:13px;color:#93c5fd;line-height:1.6;padding:5px 0;border-bottom:1px solid rgba(59,130,246,0.15);}
+  .connection-insight-row:last-child{border-bottom:none;}
+  .connection-insight-row::before{content:"→ ";color:#3b82f6;font-weight:700;}
+  .action-card{background:#0f172a;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px;}
+  .action-card-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f59e0b;margin-bottom:6px;}
+  .action-card-metric{font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:6px;}
+  .action-card-text{font-size:13px;color:#64748b;line-height:1.6;}
+  .trend-chart-wrap{background:#1e293b;border-radius:14px;padding:14px;margin-bottom:12px;}
+  .trend-chart-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#475569;margin-bottom:10px;}
+  .trend-bars{display:flex;align-items:flex-end;gap:6px;height:60px;}
+  .trend-bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .trend-bar{width:100%;border-radius:3px 3px 0 0;background:#1e3a5f;transition:height 0.3s;}
+  .trend-bar.active{background:#3b82f6;}
+  .trend-bar-label{font-size:9px;color:#334155;text-align:center;line-height:1.2;}
+  .trend-bar-val{font-size:9px;color:#64748b;text-align:center;}
+  .player-engage-card{background:#1e293b;border-radius:14px;padding:14px;margin-bottom:12px;border:1px dashed #334155;}
+  .player-engage-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#334155;margin-bottom:6px;}
+  .player-engage-empty{font-size:12px;color:#334155;line-height:1.5;}
+
+  /* Subscription gate */
+
+  /* Connection insight dashboard */
+  .insight-dashboard{margin-bottom:20px;}
+  .insight-section-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#475569;margin-bottom:10px;}
+  .week-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .week-col{background:#1e293b;border-radius:12px;padding:12px 14px;}
+  .week-col-label{font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#475569;margin-bottom:8px;}
+  .week-metric{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #0f172a;font-size:12px;}
+  .week-metric:last-child{border-bottom:none;}
+  .week-metric-name{color:#64748b;}
+  .week-metric-val{font-weight:700;}
+  .week-metric-val.up{color:#22c55e;}
+  .week-metric-val.down{color:#ef4444;}
+  .week-metric-val.flat{color:#94a3b8;}
+  .connection-card{background:#1e3a5f;border:1px solid #3b82f6;border-radius:14px;padding:16px;margin-bottom:12px;}
+  .connection-card-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#3b82f6;margin-bottom:8px;}
+  .connection-insight-row{font-size:13px;color:#93c5fd;line-height:1.6;padding:5px 0;border-bottom:1px solid rgba(59,130,246,0.15);}
+  .connection-insight-row:last-child{border-bottom:none;}
+  .connection-insight-row::before{content:"→ ";color:#3b82f6;font-weight:700;}
+  .action-card{background:#0f172a;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px;}
+  .action-card-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f59e0b;margin-bottom:6px;}
+  .action-card-metric{font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:6px;}
+  .action-card-text{font-size:13px;color:#64748b;line-height:1.6;}
+  .trend-chart-wrap{background:#1e293b;border-radius:14px;padding:14px;margin-bottom:12px;}
+  .trend-chart-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#475569;margin-bottom:10px;}
+  .trend-bars{display:flex;align-items:flex-end;gap:6px;height:60px;}
+  .trend-bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .trend-bar{width:100%;border-radius:3px 3px 0 0;background:#1e3a5f;transition:height 0.3s;}
+  .trend-bar.active{background:#3b82f6;}
+  .trend-bar-label{font-size:9px;color:#334155;text-align:center;line-height:1.2;}
+  .trend-bar-val{font-size:9px;color:#64748b;text-align:center;}
+  .player-engage-card{background:#1e293b;border-radius:14px;padding:14px;margin-bottom:12px;border:1px dashed #334155;}
+  .player-engage-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#334155;margin-bottom:6px;}
+  .player-engage-empty{font-size:12px;color:#334155;line-height:1.5;}
+
+  /* Subscription gate */
+
+  .sub-banner{display:flex;align-items:center;gap:10px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;}
+  .sub-banner-icon{font-size:20px;flex-shrink:0;}
+  .sub-banner-text{flex:1;color:#93c5fd;line-height:1.5;}
+  .sub-banner-text strong{color:#f8fafc;display:block;margin-bottom:2px;}
+  .sub-banner-btn{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .paywall-overlay{position:fixed;inset:0;background:rgba(10,12,20,0.95);z-index:9990;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+  .paywall-card{background:#1e293b;border:1px solid #1e3a5f;border-radius:20px;padding:32px 24px;max-width:360px;width:100%;}
+  .paywall-icon{font-size:48px;margin-bottom:16px;}
+  .paywall-title{font-size:22px;font-weight:700;color:#f8fafc;margin-bottom:8px;}
+  .paywall-sub{font-size:14px;color:#64748b;line-height:1.6;margin-bottom:24px;}
+  .paywall-price{font-size:32px;font-weight:700;color:#93c5fd;margin-bottom:4px;}
+  .paywall-period{font-size:13px;color:#475569;margin-bottom:24px;}
+  .paywall-cta{width:100%;padding:16px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:12px;}
+  .paywall-cta:active{background:#2563eb;}
+  .paywall-dismiss{background:none;border:none;color:#334155;font-size:13px;cursor:pointer;padding:8px;}
+
   /* Metric info button */
+
   .metric-info-btn{background:none;border:none;color:#334155;cursor:pointer;font-size:11px;padding:0 4px;line-height:1;vertical-align:middle;margin-left:4px;}
   .metric-info-btn:hover{color:#93c5fd;}
   /* Hide inline panels — content is now shown in modal */
@@ -1079,10 +1202,116 @@ function showUploadForm(name, program) {
   document.getElementById('upload-form').style.display='block';
   var progBadge = program ? '<span class="program-badge">'+program+'</span>' : '';
   document.getElementById('loggedInAs').innerHTML = 'Logged in as <strong>'+name+'</strong>'+progBadge+' — ready to upload.';
+  // Check subscription status
+  callBackend('checkSubscription', [name],
+    function(sub) {
+      window._subStatus = sub || { status: 'trial', access: 'full', daysLeft: 14 };
+      renderSubBanner(sub, name);
+      if (sub && sub.access === 'readonly') {
+        lockUploadForm();
+      }
+    },
+    function() { window._subStatus = { status: 'active', access: 'full' }; }
+  );
   // Load retention data (streak, PBs, pre-session focus)
   callBackend('getCoachRetentionData', [name],
     function(data){ if(data) renderRetentionUI(data, name); },
     function(){});
+}
+
+function renderSubBanner(sub, name) {
+  // Remove existing banner
+  var existing = document.getElementById('subBanner');
+  if (existing) existing.remove();
+  if (!sub) return;
+
+  var banner = document.createElement('div');
+  banner.id = 'subBanner';
+  banner.className = 'sub-banner';
+
+  if (sub.status === 'trialing' && sub.daysLeft > 0) {
+    banner.innerHTML =
+      '<div class="sub-banner-icon">⏱</div>' +
+      '<div class="sub-banner-text"><strong>' + sub.daysLeft + ' days left in your free trial</strong>' +
+      'Subscribe now to keep full access after your trial ends.</div>' +
+      '<button class="sub-banner-btn" onclick="showPaywall()">Subscribe $9.99/mo</button>';
+  } else if (sub.status === 'trial_expired' || sub.access === 'readonly') {
+    banner.innerHTML =
+      '<div class="sub-banner-icon">🔒</div>' +
+      '<div class="sub-banner-text"><strong>Your free trial has ended</strong>' +
+      'Subscribe to upload new sessions. Your history is still available.</div>' +
+      '<button class="sub-banner-btn" onclick="showPaywall()">Subscribe $9.99/mo</button>';
+  } else if (sub.status === 'past_due') {
+    banner.innerHTML =
+      '<div class="sub-banner-icon">⚠️</div>' +
+      '<div class="sub-banner-text"><strong>Payment failed</strong>' +
+      'Please update your payment method to restore full access.</div>' +
+      '<button class="sub-banner-btn" onclick="openBillingPortal()">Update payment</button>';
+  } else {
+    return; // active — no banner needed
+  }
+
+  var loggedIn = document.getElementById('loggedInAs');
+  if (loggedIn && loggedIn.parentNode) {
+    loggedIn.parentNode.insertBefore(banner, loggedIn.nextSibling);
+  }
+}
+
+function lockUploadForm() {
+  var submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '🔒 Subscribe to upload sessions';
+    submitBtn.onclick = function() { showPaywall(); };
+  }
+  // Disable record button too
+  var recBtn = document.getElementById('recordBtn');
+  if (recBtn) { recBtn.disabled = true; recBtn.title = 'Subscribe to record sessions'; }
+}
+
+function showPaywall() {
+  var existing = document.getElementById('paywallOverlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'paywallOverlay';
+  overlay.className = 'paywall-overlay';
+  overlay.innerHTML =
+    '<div class="paywall-card">' +
+    '<div class="paywall-icon">🎙</div>' +
+    '<div class="paywall-title">Continue your development</div>' +
+    '<div class="paywall-sub">Upload unlimited sessions, track your personal bests, and get AI-powered feedback every week.</div>' +
+    '<div class="paywall-price">$9.99</div>' +
+    '<div class="paywall-period">per month · cancel any time · 14-day free trial</div>' +
+    '<button class="paywall-cta" onclick="startCheckout()">Start free trial →</button>' +
+    '<button class="paywall-dismiss" onclick="document.getElementById(\'paywallOverlay\').remove()">Maybe later</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+}
+
+function startCheckout() {
+  var name  = _lastCoach || sessionStorage.getItem('coachName') || '';
+  var email = sessionStorage.getItem('coachEmail') || '';
+  var btn   = document.querySelector('.paywall-cta');
+  if (btn) { btn.textContent = 'Loading...'; btn.disabled = true; }
+
+  callBackend('createCheckoutSession', [name, email, ''],
+    function(r) {
+      if (r && r.url) {
+        window.location.href = r.url;
+      } else {
+        alert(r ? r.error : 'Error starting checkout. Please try again.');
+        if (btn) { btn.textContent = 'Start free trial →'; btn.disabled = false; }
+      }
+    },
+    function(e) {
+      alert('Error: ' + (e.message||String(e)));
+      if (btn) { btn.textContent = 'Start free trial →'; btn.disabled = false; }
+    }
+  );
+}
+
+function openBillingPortal() {
+  window.open('https://billing.stripe.com/p/login/YOUR_PORTAL_LINK', '_blank');
 }
 
 function renderRetentionUI(data, name) {
@@ -1790,6 +2019,172 @@ function buildReportHTML(report, agOverride, canvasId) {
   return html;
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// CONNECTION INSIGHT DASHBOARD
+// Shows this week vs last week + narrative linking behaviour
+// to player experience
+// ═══════════════════════════════════════════════════════════════
+function buildConnectionInsight(sessions, coach) {
+  var html = '<div class="insight-dashboard">';
+
+  // Split sessions: last 2 sessions vs 2 before that
+  var len  = sessions.length;
+  var last = sessions.slice(0, Math.min(2, len));   // most recent (reversed order)
+  var prev = sessions.slice(2, Math.min(4, len));
+
+  // Extract metrics from a session array — average across the group
+  function avgMetrics(arr) {
+    if (!arr.length) return null;
+    var sum = {openQ:0, qi:0, praise:0, pc:0, tactical:0};
+    var cnt = 0;
+    arr.forEach(function(s) {
+      if (!s.report || !s.report.metrics) return;
+      var m = s.report.metrics;
+      sum.openQ    += parseFloat(m.openQ)    || 0;
+      sum.qi       += parseFloat(m.qi)       || 0;
+      sum.praise   += parseFloat(m.praise)   || 0;
+      sum.pc       += parseFloat(m.pc)       || 0;
+      sum.tactical += parseFloat(m.tactical) || 0;
+      cnt++;
+    });
+    if (!cnt) return null;
+    return {
+      openQ:    parseFloat((sum.openQ    / cnt).toFixed(2)),
+      qi:       parseFloat((sum.qi       / cnt).toFixed(2)),
+      praise:   parseFloat((sum.praise   / cnt).toFixed(1)),
+      pc:       parseFloat((sum.pc       / cnt).toFixed(2)),
+      tactical: parseFloat((sum.tactical / cnt).toFixed(1))
+    };
+  }
+
+  var currMetrics = avgMetrics(last);
+  var prevMetrics = avgMetrics(prev);
+
+  // ── This week vs last week card ───────────────────────────
+  if (currMetrics && prevMetrics) {
+    var rows = [
+      {label:'Discovery Questions', key:'openQ',    unit:'/1000w'},
+      {label:'Questioning Balance',  key:'qi',       unit:''},
+      {label:'Positive Moments',     key:'praise',   unit:'/1000w'},
+      {label:'Encouragement Ratio',  key:'pc',       unit:''},
+      {label:'Game Language',         key:'tactical', unit:'/1000w'}
+    ];
+
+    html += '<div class="week-compare-card">';
+    html += '<div class="week-compare-header">';
+    html += '<div class="week-compare-title">This session vs last session</div>';
+    html += '<div class="week-compare-badge">Latest ' + last.length + ' vs previous ' + prev.length + '</div>';
+    html += '</div>';
+
+    rows.forEach(function(r) {
+      var curr = currMetrics[r.key] || 0;
+      var prev2 = prevMetrics[r.key] || 0;
+      var delta = parseFloat((curr - prev2).toFixed(2));
+      var deltaText = delta > 0 ? '+' + delta : String(delta);
+      var deltaCls  = delta > 0.05 ? 'delta-up' : delta < -0.05 ? 'delta-down' : 'delta-flat';
+      if (deltaCls === 'delta-flat') deltaText = '→';
+
+      html += '<div class="week-metric-row">';
+      html += '<div class="week-metric-label">' + r.label + '</div>';
+      html += '<div class="week-metric-vals">';
+      html += '<div class="week-metric-prev">' + prev2.toFixed(r.key==='qi'||r.key==='pc'?2:1) + r.unit + '</div>';
+      html += '<div class="week-metric-curr">' + curr.toFixed(r.key==='qi'||r.key==='pc'?2:1) + r.unit + '</div>';
+      html += '<div class="week-metric-delta ' + deltaCls + '">' + deltaText + '</div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+
+    // ── Connection insight narrative ──────────────────────
+    // Find the biggest positive change to call out
+    var bestChange = null, bestDelta = 0;
+    rows.forEach(function(r) {
+      var d = (currMetrics[r.key]||0) - (prevMetrics[r.key]||0);
+      if (d > bestDelta) { bestDelta = d; bestChange = r; }
+    });
+
+    var worstChange = null, worstDelta = 0;
+    rows.forEach(function(r) {
+      var d = (prevMetrics[r.key]||0) - (currMetrics[r.key]||0);
+      if (d > worstDelta) { worstDelta = d; worstChange = r; }
+    });
+
+    var firstName = coach ? coach.split(' ')[0] : 'Coach';
+
+    html += '<div class="connection-card">';
+    html += '<div class="connection-header">Connection insight</div>';
+
+    if (bestChange && bestDelta > 0.1) {
+      var curr2 = currMetrics[bestChange.key].toFixed(bestChange.key==='qi'||bestChange.key==='pc'?2:1);
+      var prev3 = prevMetrics[bestChange.key].toFixed(bestChange.key==='qi'||bestChange.key==='pc'?2:1);
+      html += '<div class="connection-insight">' + firstName + ', your <span>' + bestChange.label + '</span> ';
+      html += 'moved from <span>' + prev3 + '</span> to <span>' + curr2 + bestChange.unit + '</span> — ';
+      html += 'that shift means players are spending more time solving problems rather than waiting for answers. ';
+      html += 'When coaches question more, players report feeling more challenged and more capable.</div>';
+    } else {
+      html += '<div class="connection-insight">' + firstName + ', your metrics are holding steady. ';
+      html += 'Consistency is the foundation — the next step is finding one behaviour to push higher. ';
+      html += 'See your action below.</div>';
+    }
+
+    if (worstChange && worstDelta > 0.1) {
+      html += '<div class="connection-insight" style="margin-top:6px;">';
+      html += 'The area to watch: your <span style="color:#f59e0b;">' + worstChange.label + '</span> ';
+      html += 'dipped slightly. This is normal across sessions — the action card below gives you one thing to try.</div>';
+    }
+    html += '</div>';
+
+  } else if (currMetrics) {
+    // Only one set of sessions — show encouragement
+    html += '<div class="connection-card">';
+    html += '<div class="connection-header">Getting started</div>';
+    html += '<div class="connection-insight">Upload one more session to unlock your week-on-week comparison. ';
+    html += 'After two uploads Voach will show you exactly what is changing in your coaching. ';
+    html += 'See how those changes connect to your players experience.</div>';
+    html += '</div>';
+  }
+
+  // ── Action for next session ───────────────────────────────
+  if (currMetrics) {
+    var actionTitle = '', actionBody = '';
+
+    // Find the metric furthest below benchmark
+    var worstMetric = null, worstRatio = 999;
+    var benchmarks = {openQ:3, qi:0.5, praise:5, pc:3, tactical:8};
+    ['openQ','qi','praise','pc','tactical'].forEach(function(k) {
+      var ratio = (currMetrics[k]||0) / (benchmarks[k]||1);
+      if (ratio < worstRatio) { worstRatio = ratio; worstMetric = k; }
+    });
+
+    var actionMap = {
+      openQ:    {title:'Add one more discovery question per training block',
+                 body:'Before you give the next instruction, pause and ask "What do you notice?" or "What would you do here?" — just once more per block than you did last session.'},
+      qi:       {title:'Replace one instruction with a question',
+                 body:'For every five things you say this session, make at least two of them questions. Count them on your fingers if it helps.'},
+      praise:   {title:'Name one player and one specific action',
+                 body:'At least three times this session: name the player and the action. Not great job — say the name and what they did well.'},
+      tactical: {title:'Reference your Main Principle by name at least three times',
+                 body:'Use the specific language from your session plan — Phase of Play, Player Action, Main Principle. Players connect training language to match moments when you use it consistently.'}
+    };
+
+    if (worstMetric && actionMap[worstMetric]) {
+      actionTitle = actionMap[worstMetric].title;
+      actionBody  = actionMap[worstMetric].body;
+    }
+
+    if (actionTitle) {
+      html += '<div class="action-card">';
+      html += '<div class="action-header">Action for next session</div>';
+      html += '<div class="action-title">' + actionTitle + '</div>';
+      html += '<div class="action-body">' + actionBody + '</div>';
+      html += '</div>';
+    }
+  }
+
+  html += '</div>';
+  return html;
+}
+
 function buildCoachCard(report, ag, rId) {
   var html = '';
   var metrics = report.metrics || {}, bms = report.benchmarks || {};
@@ -2034,22 +2429,135 @@ function drawLineChart(id, datasets, labels, colors) {
 }
 
 // ── My Sessions ───────────────────────────────────────────
+
+// ── Connection Insight UI ─────────────────────────────────────
+function buildConnectionInsight(insight, coach) {
+  if (!insight) return '';
+  var tw = insight.thisWeek  || {};
+  var lw = insight.lastWeek  || {};
+  var fw = insight.fourWeeks || [];
+  var firstName = (coach||'').split(' ')[0];
+  var html = '<div class="insight-dashboard">';
+
+  // ── This week vs last week ───────────────────────────────
+  html += '<div class="insight-section-label">This week vs last week</div>';
+  html += '<div class="week-compare">';
+
+  function weekCol(label, data, compareData, isThis) {
+    var metricDefs = [
+      {key:'openQ',   name:'Discovery Q', unit:'/1000w'},
+      {key:'qi',      name:'Q:I Balance',  unit:''},
+      {key:'praise',  name:'Pos. Moments', unit:'/1000w'},
+      {key:'pc',      name:'Encouragement',unit:''},
+    ];
+    var out = '<div class="week-col">';
+    out += '<div class="week-col-label">' + label + (data.count ? ' (' + data.count + ' session' + (data.count!==1?'s':'') + ')' : '') + '</div>';
+    if (!data.count) {
+      out += '<div style="font-size:12px;color:#334155;padding:8px 0;">No sessions this period</div>';
+    } else {
+      metricDefs.forEach(function(m) {
+        var val  = parseFloat(data[m.key])||0;
+        var prev = parseFloat(compareData[m.key])||0;
+        var diff = val - prev;
+        var cls  = !isThis || !prev ? 'flat' : diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'flat';
+        var arrow= !isThis || !prev ? '' : diff > 0.05 ? ' ↑' : diff < -0.05 ? ' ↓' : '';
+        out += '<div class="week-metric">';
+        out += '<span class="week-metric-name">' + m.name + '</span>';
+        out += '<span class="week-metric-val ' + cls + '">' + (val > 0 ? val.toFixed(m.key==='qi'?2:1) + m.unit + arrow : '—') + '</span>';
+        out += '</div>';
+      });
+    }
+    out += '</div>';
+    return out;
+  }
+
+  html += weekCol('Last week', lw, tw, false);
+  html += weekCol('This week', tw, lw, true);
+  html += '</div>';
+
+  // ── Connection insight sentences ─────────────────────────
+  if (insight.insights && insight.insights.length > 0) {
+    html += '<div class="connection-card">';
+    html += '<div class="connection-card-label">Connection insight</div>';
+    insight.insights.forEach(function(ins) {
+      html += '<div class="connection-insight-row">' + ins + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ── Action for next session ──────────────────────────────
+  if (insight.action) {
+    html += '<div class="action-card">';
+    html += '<div class="action-card-label">Your focus for next session</div>';
+    html += '<div class="action-card-metric">' + insight.action.label + '</div>';
+    html += '<div class="action-card-text">' + insight.action.action + '</div>';
+    html += '</div>';
+  }
+
+  // ── 4-week trend chart ───────────────────────────────────
+  if (fw.length >= 2) {
+    var maxVal = Math.max.apply(null, fw.map(function(w){ return w.qi||0; }).filter(function(v){return v>0;}));
+    if (maxVal > 0) {
+      html += '<div class="trend-chart-wrap">';
+      html += '<div class="trend-chart-label">Questioning balance — 4 week trend</div>';
+      html += '<div class="trend-bars">';
+      fw.forEach(function(w, i) {
+        var val = w.qi || 0;
+        var pct = maxVal > 0 ? Math.round((val / Math.max(maxVal * 1.2, 1)) * 100) : 0;
+        var isThis = i === fw.length - 1;
+        html += '<div class="trend-bar-group">';
+        html += '<div class="trend-bar-val">' + (val > 0 ? val.toFixed(2) : '—') + '</div>';
+        html += '<div class="trend-bar ' + (isThis?'active':'') + '" style="height:' + (pct||4) + '%;min-height:4px;"></div>';
+        html += '<div class="trend-bar-label">' + (w.label||'') + '</div>';
+        html += '</div>';
+      });
+      html += '</div></div>';
+    }
+  }
+
+  // ── Player engagement placeholder ───────────────────────
+  html += '<div class="player-engage-card">';
+  html += '<div class="player-engage-label">Player engagement</div>';
+  html += '<div class="player-engage-empty">Player survey coming soon — after each session, your players will rate how fun, challenging, and belonging they felt. That data will appear here alongside your coaching metrics.</div>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
 function loadDashboard() {
   var coach=sessionStorage.getItem('coachName')||_lastCoach;
   if(!coach){ document.getElementById('dashboardContent').innerHTML='<div class="empty-state">Log in on the Upload screen first.</div>'; return; }
   document.getElementById('dashboard-sub').textContent='Season overview — '+coach;
   document.getElementById('dashboardContent').innerHTML='<div class="loading-inline">Loading...</div>';
+  // Load both history and connection insight in parallel
+  var historyData = null, insightData = null, loaded = 0;
+  function tryRender() {
+    loaded++;
+    if (loaded < 2) return;
+    if(!historyData||!historyData.sessions||!historyData.sessions.length){
+      document.getElementById('dashboardContent').innerHTML='<div class="empty-state">No sessions yet. Upload your first session to get started.</div>';
+      return;
+    }
+    renderDashboard(historyData, coach, insightData);
+  }
   callBackend('getCoachHistory', [coach],
-    function(data){
-      if(!data||!data.sessions||!data.sessions.length){ document.getElementById('dashboardContent').innerHTML='<div class="empty-state">No sessions yet. Upload your first session to get started.</div>'; return; }
-      renderDashboard(data,coach);
-    },
-    function(){});
+    function(data){ historyData=data; tryRender(); },
+    function(){ historyData={}; tryRender(); });
+  callBackend('getConnectionInsight', [coach],
+    function(data){ insightData=data; tryRender(); },
+    function(){ insightData=null; tryRender(); });
 }
 
 function renderDashboard(data, coach) {
   var html='';
-  // Season review button — always at top
+
+  // ── Connection Insight section ───────────────────────────
+  if (data.sessions && data.sessions.length >= 2) {
+    html += buildConnectionInsight(data.sessions, coach);
+  }
+
+  // Season review button
   html += '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;">';
   html += '<button class="download-btn" id="seasonReviewBtn" onclick="generateSeasonReview()" style="font-size:13px;padding:10px 18px;">📄 Season Review PDF</button>';
   html += '<button class="download-btn" id="certBtn" onclick="downloadSeasonCertificate()" style="font-size:13px;padding:10px 18px;margin-left:8px;">🏅 Season Certificate</button>';

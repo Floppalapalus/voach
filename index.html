@@ -630,41 +630,26 @@
         <label class="eyebrow">Session objective</label>
         <textarea id="sessionObjective" placeholder="e.g. Building out from the back by passing or dribbling forward." maxlength="300"></textarea>
         <p class="char-hint">What were you coaching today?</p>
-        <label class="eyebrow">Recording</label>
+        <label class="eyebrow">Session date</label>
+        <input type="date" id="sessionDate" style="background:#1e293b;border:1px solid #334155;color:#f8fafc;border-radius:10px;padding:10px 12px;font-size:14px;width:100%;margin-bottom:16px;box-sizing:border-box;">
+
+        <label class="eyebrow">How are you sharing your session?</label>
         <div class="record-toggle">
-          <button class="record-toggle-btn active" id="tabRecord" onclick="switchRecordTab('record')">🎙 Record</button>
-          <button class="record-toggle-btn" id="tabUpload" onclick="switchRecordTab('upload')">📁 Upload file</button>
+          <button class="record-toggle-btn active" id="tabUpload" onclick="switchUploadTab('file')">🎙 Voice memo file</button>
+          <button class="record-toggle-btn" id="tabTranscript" onclick="switchUploadTab('transcript')">📝 Paste transcript</button>
         </div>
 
-        <!-- Record panel -->
-        <div class="recorder-panel active" id="panelRecord">
-          <div class="record-btn-wrap">
-            <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙</button>
-            <div class="record-timer" id="recordTimer">0:00</div>
-            <div class="record-status" id="recordStatus">Tap to start recording</div>
-            <div class="record-hint">Record your coaching session live.<br>Tap again to stop and analyse.</div>
-          </div>
-          <div class="compress-bar-wrap" id="compressWrap">
-            <div class="compress-label">Compressing audio...</div>
-            <div class="compress-bar-track"><div class="compress-bar-fill" id="compressFill"></div></div>
-          </div>
-          <div id="recordedRow" class="file-selected" style="display:none;">
-            <div style="font-size:24px;">🎙</div>
-            <div style="flex:1;min-width:0;">
-              <div class="file-name" id="recordedName">Recording</div>
-              <div class="file-size" id="recordedSize">—</div>
-            </div>
-            <button onclick="clearRecording()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;padding:4px;">✕</button>
-          </div>
-        </div>
-
-        <!-- Upload panel -->
-        <div class="recorder-panel" id="panelUpload">
+        <!-- File upload panel -->
+        <div class="recorder-panel active" id="panelUpload">
           <div class="file-drop" id="fileDrop" ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
-            <input type="file" id="fileInput" accept=".mp3,.mp4,.m4a,.wav,.webm,.mov,.aac" onchange="onFileSelected(this.files[0])">
+            <input type="file" id="fileInput" accept=".mp3,.mp4,.m4a,.wav,.webm,.mov,.aac,.ogg" onchange="onFileSelected(this.files[0])">
             <div class="upload-icon">🎙</div>
-            <div class="upload-text">Tap to choose a file</div>
-            <div class="upload-hint">MP3 · M4A · MP4 · WAV · MOV</div>
+            <div class="upload-text">Tap to choose your voice memo</div>
+            <div class="upload-hint">MP3 · M4A · WAV · MOV · MP4</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:12px;color:#475569;line-height:1.6;">
+            <strong style="color:#64748b;display:block;margin-bottom:3px;">How to share from iPhone Voice Memos</strong>
+            Open Voice Memos → tap your recording → tap ··· → Share → Save to Files → upload here.
           </div>
           <div id="fileSelectedRow" class="file-selected" style="display:none;">
             <div style="font-size:24px;">🎵</div>
@@ -672,6 +657,28 @@
             <button onclick="clearFile()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;padding:4px;">✕</button>
           </div>
         </div>
+
+        <!-- Transcript paste panel -->
+        <div class="recorder-panel" id="panelTranscript">
+          <div style="background:#1e293b;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#475569;line-height:1.6;">
+            <strong style="color:#64748b;display:block;margin-bottom:3px;">Three ways to get a transcript</strong>
+            1. iPhone Voice Memos → tap recording → tap ··· → View Transcription<br>
+            2. Share your audio with any AI tool and ask it to transcribe<br>
+            3. Upload your video to YouTube (unlisted) → auto-captions → copy text
+          </div>
+          <textarea id="transcriptPaste"
+            placeholder="Paste your session transcript here..."
+            style="width:100%;min-height:180px;background:#1e293b;border:1px solid #334155;color:#f8fafc;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6;resize:vertical;box-sizing:border-box;font-family:inherit;"
+            oninput="onTranscriptInput()"></textarea>
+          <div id="transcriptWordCount" style="font-size:11px;color:#334155;margin-top:4px;text-align:right;">0 words</div>
+        </div>
+
+        <label class="eyebrow" style="margin-top:14px;">Session notes <span style="font-weight:400;color:#334155;">(optional)</span></label>
+        <textarea id="sessionNotes"
+          placeholder="Anything Voach should know — e.g. first session back after winter break, noisy environment, players were tired..."
+          maxlength="400"
+          style="width:100%;min-height:70px;background:#1e293b;border:1px solid #334155;color:#f8fafc;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;resize:none;box-sizing:border-box;font-family:inherit;margin-bottom:4px;"></textarea>
+        <p class="char-hint">Extra context helps Voach give better feedback</p>
 
         <div id="fileWarning" class="file-warning"></div>
       </div>
@@ -1202,6 +1209,12 @@ function showUploadForm(name, program) {
   document.getElementById('upload-form').style.display='block';
   var progBadge = program ? '<span class="program-badge">'+program+'</span>' : '';
   document.getElementById('loggedInAs').innerHTML = 'Logged in as <strong>'+name+'</strong>'+progBadge+' — ready to upload.';
+  // Default session date to today
+  var sd = document.getElementById('sessionDate');
+  if (sd && !sd.value) {
+    var today = new Date();
+    sd.value = today.getFullYear()+'-'+(String(today.getMonth()+1).padStart(2,'0'))+'-'+(String(today.getDate()).padStart(2,'0'));
+  }
   // Check subscription status
   callBackend('checkSubscription', [name],
     function(sub) {
@@ -1519,33 +1532,35 @@ function onDragLeave(){ document.getElementById('fileDrop').classList.remove('dr
 function onDrop(e){ e.preventDefault(); document.getElementById('fileDrop').classList.remove('drag-over'); if(e.dataTransfer.files[0]) onFileSelected(e.dataTransfer.files[0]); }
 
 // ═══════════════════════════════════════════════════════════════
-// IN-APP RECORDER
+// UPLOAD MODE — file or transcript
 // ═══════════════════════════════════════════════════════════════
-var _mediaRecorder  = null;
-var _recordChunks   = [];
-var _recordingActive= false;
-var _recordTimerInt = null;
-var _recordSeconds  = 0;
-var _recordedBlob   = null;
-var _recordedFile   = null;  // used as selectedFile when recording tab active
-var _activeTab      = 'record';
+var _activeTab       = 'file';
+var _pastedTranscript = '';
 
-function switchRecordTab(tab) {
+function switchUploadTab(tab) {
   _activeTab = tab;
-  document.getElementById('panelRecord').classList.toggle('active', tab === 'record');
-  document.getElementById('panelUpload').classList.toggle('active', tab === 'upload');
-  document.getElementById('tabRecord').classList.toggle('active', tab === 'record');
-  document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+  document.getElementById('panelUpload').classList.toggle('active',     tab === 'file');
+  document.getElementById('panelTranscript').classList.toggle('active', tab === 'transcript');
+  document.getElementById('tabUpload').classList.toggle('active',     tab === 'file');
+  document.getElementById('tabTranscript').classList.toggle('active', tab === 'transcript');
   checkReady();
 }
 
-function toggleRecording() {
-  if (_recordingActive) {
-    stopRecording();
-  } else {
-    startRecording();
+function onTranscriptInput() {
+  var ta   = document.getElementById('transcriptPaste');
+  var text = ta ? ta.value.trim() : '';
+  _pastedTranscript = text;
+  var words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+  var wc = document.getElementById('transcriptWordCount');
+  if (wc) {
+    wc.textContent = words + ' word' + (words === 1 ? '' : 's');
+    wc.style.color = words < 100 ? '#ef4444' : words < 300 ? '#f59e0b' : '#22c55e';
   }
+  checkReady();
 }
+
+// Stub out old recording functions so nothing breaks
+function toggleRecording(){}
 
 function startRecording() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -1753,28 +1768,78 @@ function formatTime(s) {
 }
 
 function checkReady(){
-  var hasFile = _activeTab === 'record' ? !!_recordedFile : !!selectedFile;
-  document.getElementById('submitBtn').disabled=!(document.getElementById('ageGroup').value && hasFile);
+  var hasInput = false;
+  if (_activeTab === 'file') {
+    hasInput = !!selectedFile;
+  } else if (_activeTab === 'transcript') {
+    hasInput = _pastedTranscript && _pastedTranscript.split(/\s+/).filter(Boolean).length >= 50;
+  }
+  var hasAge = !!document.getElementById('ageGroup').value;
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = !(hasAge && hasInput);
+  if (_activeTab === 'transcript' && !hasInput && _pastedTranscript.length > 0) {
+    btn.disabled = true; // too short
+  }
 }
 
 function submitSession() {
   var ageGroup  = document.getElementById('ageGroup').value;
   var objective = document.getElementById('sessionObjective').value.trim();
-  var fileToUse = _activeTab === 'record' ? _recordedFile : selectedFile;
-  if (!_lastCoach || !ageGroup || !fileToUse) return;
+  var notes     = document.getElementById('sessionNotes') ? document.getElementById('sessionNotes').value.trim() : '';
+  var datePick  = document.getElementById('sessionDate') ? document.getElementById('sessionDate').value : '';
+  if (!_lastCoach || !ageGroup) return;
+
+  // Combine objective + notes for AI context
+  var fullObjective = objective;
+  if (notes) fullObjective += (objective ? '\n\nCoach notes: ' : 'Coach notes: ') + notes;
+
   _lastAgeGroup = ageGroup;
-  _lastDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  // Use selected date if provided, otherwise today
+  if (datePick) {
+    var dp = new Date(datePick + 'T12:00:00');
+    _lastDate = dp.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  } else {
+    _lastDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }
+
   document.getElementById('upload-form').style.display='none';
   document.getElementById('upload-progress').style.display='block';
   document.getElementById('uploadError').style.display='none';
+
+  // ── Transcript paste mode ──────────────────────────────────
+  if (_activeTab === 'transcript') {
+    if (!_pastedTranscript || _pastedTranscript.split(/\s+/).filter(Boolean).length < 50) {
+      showUploadError('Please paste at least 50 words of transcript.');
+      return;
+    }
+    setStep('step-upload','done');
+    setStep('step-transcribe','done');
+    setStep('step-report','active');
+    // Skip transcription — send transcript directly
+    callBackend('analyseTranscript',
+      [_lastCoach, ageGroup, fullObjective, _sessionType, _pastedTranscript, _lastDate],
+      function(result){
+        if(result&&result.error){ showUploadError(result.error); return; }
+        setStep('step-report','done');
+        if(result&&result.report){ showResult(result.report); }
+        else { showUploadError('No report returned. Please try again.'); }
+      },
+      function(err){ showUploadError('Error: '+(err.message||String(err))); }
+    );
+    return;
+  }
+
+  // ── File upload mode ───────────────────────────────────────
+  var fileToUse = selectedFile;
+  if (!fileToUse) { showUploadError('Please choose a file.'); return; }
   setStep('step-upload','active');
   var reader = new FileReader();
   reader.onload = function(e) {
     var base64   = e.target.result.split(',')[1];
-    var mimeType = fileToUse.type || 'audio/wav';
+    var mimeType = fileToUse.type || 'audio/m4a';
     setStep('step-upload','done'); setStep('step-transcribe','active');
     callBackend('transcribeAndSave',
-      [_lastCoach,ageGroup,objective,_sessionType,base64,mimeType,_lastDate],
+      [_lastCoach, ageGroup, fullObjective, _sessionType, base64, mimeType, _lastDate],
       function(result){
         if(result&&result.error){ showUploadError(result.error); return; }
         setStep('step-transcribe','done'); setStep('step-report','active');

@@ -1215,17 +1215,7 @@ function showUploadForm(name, program) {
     var today = new Date();
     sd.value = today.getFullYear()+'-'+(String(today.getMonth()+1).padStart(2,'0'))+'-'+(String(today.getDate()).padStart(2,'0'));
   }
-  // Check subscription status
-  callBackend('checkSubscription', [name],
-    function(sub) {
-      window._subStatus = sub || { status: 'trial', access: 'full', daysLeft: 14 };
-      renderSubBanner(sub, name);
-      if (sub && sub.access === 'readonly') {
-        lockUploadForm();
-      }
-    },
-    function() { window._subStatus = { status: 'active', access: 'full' }; }
-  );
+  // Subscription gate removed — all coaches have full access
   // Load retention data (streak, PBs, pre-session focus)
   callBackend('getCoachRetentionData', [name],
     function(data){ if(data) renderRetentionUI(data, name); },
@@ -1233,72 +1223,17 @@ function showUploadForm(name, program) {
 }
 
 function renderSubBanner(sub, name) {
-  // Remove existing banner
+  // Subscription banners disabled — all coaches have full access
   var existing = document.getElementById('subBanner');
   if (existing) existing.remove();
-  if (!sub) return;
-
-  var banner = document.createElement('div');
-  banner.id = 'subBanner';
-  banner.className = 'sub-banner';
-
-  if (sub.status === 'trialing' && sub.daysLeft > 0) {
-    banner.innerHTML =
-      '<div class="sub-banner-icon">⏱</div>' +
-      '<div class="sub-banner-text"><strong>' + sub.daysLeft + ' days left in your free trial</strong>' +
-      'Subscribe now to keep full access after your trial ends.</div>' +
-      '<button class="sub-banner-btn" onclick="showPaywall()">Subscribe $9.99/mo</button>';
-  } else if (sub.status === 'trial_expired' || sub.access === 'readonly') {
-    banner.innerHTML =
-      '<div class="sub-banner-icon">🔒</div>' +
-      '<div class="sub-banner-text"><strong>Your free trial has ended</strong>' +
-      'Subscribe to upload new sessions. Your history is still available.</div>' +
-      '<button class="sub-banner-btn" onclick="showPaywall()">Subscribe $9.99/mo</button>';
-  } else if (sub.status === 'past_due') {
-    banner.innerHTML =
-      '<div class="sub-banner-icon">⚠️</div>' +
-      '<div class="sub-banner-text"><strong>Payment failed</strong>' +
-      'Please update your payment method to restore full access.</div>' +
-      '<button class="sub-banner-btn" onclick="openBillingPortal()">Update payment</button>';
-  } else {
-    return; // active — no banner needed
-  }
-
-  var loggedIn = document.getElementById('loggedInAs');
-  if (loggedIn && loggedIn.parentNode) {
-    loggedIn.parentNode.insertBefore(banner, loggedIn.nextSibling);
-  }
 }
 
 function lockUploadForm() {
-  var submitBtn = document.getElementById('submitBtn');
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = '🔒 Subscribe to upload sessions';
-    submitBtn.onclick = function() { showPaywall(); };
-  }
-  // Disable record button too
-  var recBtn = document.getElementById('recordBtn');
-  if (recBtn) { recBtn.disabled = true; recBtn.title = 'Subscribe to record sessions'; }
+  // Upload locking disabled — all coaches have full access
 }
 
 function showPaywall() {
-  var existing = document.getElementById('paywallOverlay');
-  if (existing) existing.remove();
-  var overlay = document.createElement('div');
-  overlay.id = 'paywallOverlay';
-  overlay.className = 'paywall-overlay';
-  overlay.innerHTML =
-    '<div class="paywall-card">' +
-    '<div class="paywall-icon">🎙</div>' +
-    '<div class="paywall-title">Continue your development</div>' +
-    '<div class="paywall-sub">Upload unlimited sessions, track your personal bests, and get AI-powered feedback every week.</div>' +
-    '<div class="paywall-price">$9.99</div>' +
-    '<div class="paywall-period">per month · cancel any time · 14-day free trial</div>' +
-    '<button class="paywall-cta" onclick="startCheckout()">Start free trial →</button>' +
-    '<button class="paywall-dismiss" onclick="document.getElementById(\'paywallOverlay\').remove()">Maybe later</button>' +
-    '</div>';
-  document.body.appendChild(overlay);
+  // Paywall disabled — all coaches have full access
 }
 
 function startCheckout() {

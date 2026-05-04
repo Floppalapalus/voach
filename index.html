@@ -310,7 +310,6 @@
   .trend-legend-dot{width:8px;height:8px;border-radius:50%;}
 
   /* Connection insight dashboard */
-  .insight-dashboard{margin-bottom:20px;}
   .insight-section-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#475569;margin-bottom:10px;}
   .week-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
   .week-col{background:#1e293b;border-radius:12px;padding:12px 14px;}
@@ -346,7 +345,6 @@
   /* Subscription gate */
 
   /* Connection insight dashboard */
-  .insight-dashboard{margin-bottom:20px;}
   .insight-section-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#475569;margin-bottom:10px;}
   .week-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
   .week-col{background:#1e293b;border-radius:12px;padding:12px 14px;}
@@ -530,7 +528,7 @@
       <div id="slide0" class="modal-slide active">
         <div class="modal-icon">🎙</div>
         <div class="modal-title">Welcome to Coach Analytics</div>
-        <div class="modal-body">This tool analyses your coaching sessions using AI — recording patterns, questions asked, praise given, and tactical language — and gives you personalised feedback aligned with the US Soccer Framework.</div>
+        <div class="modal-body">This tool analyses your coaching sessions using AI — recording patterns, questions asked, praise given, and tactical language — and gives you personalised, evidence-based coaching feedback.</div>
       </div>
       <div id="slide1" class="modal-slide">
         <div class="modal-icon">📊</div>
@@ -879,7 +877,7 @@ var METRIC_INFO = {
     unit: '/1000w'
   },
   pc: {
-    why: 'Players in positive environments take more risks and learn faster. The NCFC framework targets 3:1 praise-to-correction. Below 2:1 creates anxiety.',
+    why: 'Players in positive environments take more risks and learn faster. Research on youth coaching targets 3:1 praise-to-correction as a benchmark. Below 2:1 creates anxiety.',
     scale: [{label:'Correction-heavy',range:'< 2',cls:'red'},{label:'Developing',range:'2–3',cls:'amber'},{label:'Positive',range:'3+',cls:'green'}],
     try: 'For every correction, find three things to praise before the next one.',
     unit: ' ratio'
@@ -1885,7 +1883,6 @@ function buildReportHTML(report, agOverride, canvasId) {
 
   html+='<div class="profile-badge">';
   html+='<span class="session-type-badge badge-'+badgeType+'">'+sType+'</span>';
-  html+='<div class="profile-grade grade-'+grade+'">'+grade+'</div>';
   html+='<div class="profile-label">'+profLabel+'</div>';
   if(profDesc) html+='<div class="profile-desc">'+profDesc+'</div>';
   html+='</div>';
@@ -1956,2440 +1953,6 @@ function buildReportHTML(report, agOverride, canvasId) {
   }
 
   if(report.objectiveAlignment) html+='<div class="obj-box"><div class="obj-box-title">Objective Alignment</div><div class="obj-box-text">'+report.objectiveAlignment+'</div></div>';
-
-  // ── 3T Teaching Assessment ──
-  if (report.teachingAssessment) {
-    var ta = report.teachingAssessment;
-    var criteria = [
-      { key: 'positiveEnv',        label: 'Positive learning environment',         sub: 'Praise · Encouragement ratio' },
-      { key: 'playerAutonomy',     label: 'Player autonomy & check for understanding', sub: 'Discovery Questions · Extending questions' },
-      { key: 'technicalInfo',      label: 'Key technical information',              sub: 'Game Language / 1000w' },
-      { key: 'individualCoaching', label: 'Individual coaching moments',            sub: 'Player names used' },
-      { key: 'clearInstruction',   label: 'Clear and concise instruction',          sub: 'Questioning Balance (Q:I ratio)' },
-      { key: 'playerConfidence',   label: 'Players playing with confidence',        sub: 'AI-evaluated from session tone' }
-    ];
-    // Calculate overall Teaching Score
-    var statusPoints = { green: 3, amber: 2, red: 1 };
-    var totalPts = criteria.reduce(function(s,c){ return s + (statusPoints[ta[c.key] ? ta[c.key].status : 'amber'] || 2); }, 0);
-    var maxPts   = criteria.length * 3;
-    var t3Pct    = Math.round((totalPts / maxPts) * 100);
-    var t3Color  = t3Pct >= 75 ? '#22c55e' : t3Pct >= 50 ? '#f59e0b' : '#ef4444';
-
-    html += '<div class="t3-section">';
-    html += '<div class="t3-header">';
-    html += '<span class="t3-title">3T Teaching Assessment</span>';
-    html += '<span class="t3-score-badge" style="color:'+t3Color+';">Teaching Score: '+t3Pct+'%</span>';
-    html += '</div>';
-
-    criteria.forEach(function(c) {
-      var item    = ta[c.key] || { status: 'amber', evidence: '' };
-      var status  = item.status || 'amber';
-      var evidence = item.evidence || '';
-      html += '<div class="t3-row">';
-      html += '<div class="t3-light t3-'+status+'"></div>';
-      html += '<div class="t3-content">';
-      html += '<div class="t3-criterion">'+c.label+'</div>';
-      if (evidence) html += '<div class="t3-evidence">'+evidence+'</div>';
-      html += '<div class="t3-sub">'+c.sub+'</div>';
-      html += '</div></div>';
-    });
-    html += '</div>';
-  }
-
-  // ── Coaching Feedback ──
-  html+='<div class="divider-label" style="margin-top:20px;">Your Coaching Feedback</div>';
-  if(report.wentWell){ html+='<div class="went-well-box"><div class="insight-box-label" style="color:#22c55e;">✓ What went well</div><div class="insight-box-why">'+report.wentWell+'</div></div>'; }
-  if(report.focusArea){ html+='<div class="focus-box"><div class="insight-box-label" style="color:#f59e0b;">→ Your growth edge</div><div class="insight-box-title">'+(report.focusArea.title||'')+'</div>'; if(report.focusArea.why) html+='<div class="insight-box-why">'+report.focusArea.why+'</div>'; if(report.focusArea.quote) html+='<div class="insight-box-quote">Try: "'+report.focusArea.quote+'"</div>'; html+='</div>'; }
-  if(report.trendImprovement && report.trendImprovement.title){ html+='<div class="trend-box"><div class="insight-box-label" style="color:#8b5cf6;">📈 Pattern across sessions</div><div class="insight-box-title">'+(report.trendImprovement.title||'')+'</div>'; if(report.trendImprovement.why) html+='<div class="insight-box-why">'+report.trendImprovement.why+'</div>'; if(report.trendImprovement.quote) html+='<div class="insight-box-quote">'+report.trendImprovement.quote+'</div>'; html+='</div>'; }
-  if(report.objectiveAlignment) html+='<div class="obj-box"><div class="obj-box-title">Objective Alignment</div><div class="obj-box-text">'+report.objectiveAlignment+'</div></div>';
-  if(report.encouragement) html+='<div class="encourage-box">'+report.encouragement+'</div>';
-
-  // Close full report div
-  html += '</div>';
-
-  // Coach Card view
-  html += '<div id="view_card_'+rId+'">';
-  if (report.metrics && report.benchmarks) {
-    html += buildCoachCard(report, ag, rId);
-  } else {
-    html += '<div style="font-size:13px;color:#64748b;padding:16px 0;">Not enough data for coach card.</div>';
-  }
-  html += '</div>';
-
-  return html;
-}
-
-
-// ═══════════════════════════════════════════════════════════════
-// CONNECTION INSIGHT DASHBOARD
-// Shows this week vs last week + narrative linking behaviour
-// to player experience
-// ═══════════════════════════════════════════════════════════════
-function buildConnectionInsight(sessions, coach) {
-  var html = '<div class="insight-dashboard">';
-
-  // Split sessions: last 2 sessions vs 2 before that
-  var len  = sessions.length;
-  var last = sessions.slice(0, Math.min(2, len));   // most recent (reversed order)
-  var prev = sessions.slice(2, Math.min(4, len));
-
-  // Extract metrics from a session array — average across the group
-  function avgMetrics(arr) {
-    if (!arr.length) return null;
-    var sum = {openQ:0, qi:0, praise:0, pc:0, tactical:0};
-    var cnt = 0;
-    arr.forEach(function(s) {
-      if (!s.report || !s.report.metrics) return;
-      var m = s.report.metrics;
-      sum.openQ    += parseFloat(m.openQ)    || 0;
-      sum.qi       += parseFloat(m.qi)       || 0;
-      sum.praise   += parseFloat(m.praise)   || 0;
-      sum.pc       += parseFloat(m.pc)       || 0;
-      sum.tactical += parseFloat(m.tactical) || 0;
-      cnt++;
-    });
-    if (!cnt) return null;
-    return {
-      openQ:    parseFloat((sum.openQ    / cnt).toFixed(2)),
-      qi:       parseFloat((sum.qi       / cnt).toFixed(2)),
-      praise:   parseFloat((sum.praise   / cnt).toFixed(1)),
-      pc:       parseFloat((sum.pc       / cnt).toFixed(2)),
-      tactical: parseFloat((sum.tactical / cnt).toFixed(1))
-    };
-  }
-
-  var currMetrics = avgMetrics(last);
-  var prevMetrics = avgMetrics(prev);
-
-  // ── This week vs last week card ───────────────────────────
-  if (currMetrics && prevMetrics) {
-    var rows = [
-      {label:'Discovery Questions', key:'openQ',    unit:'/1000w'},
-      {label:'Questioning Balance',  key:'qi',       unit:''},
-      {label:'Positive Moments',     key:'praise',   unit:'/1000w'},
-      {label:'Encouragement Ratio',  key:'pc',       unit:''},
-      {label:'Game Language',         key:'tactical', unit:'/1000w'}
-    ];
-
-    html += '<div class="week-compare-card">';
-    html += '<div class="week-compare-header">';
-    html += '<div class="week-compare-title">This session vs last session</div>';
-    html += '<div class="week-compare-badge">Latest ' + last.length + ' vs previous ' + prev.length + '</div>';
-    html += '</div>';
-
-    rows.forEach(function(r) {
-      var curr = currMetrics[r.key] || 0;
-      var prev2 = prevMetrics[r.key] || 0;
-      var delta = parseFloat((curr - prev2).toFixed(2));
-      var deltaText = delta > 0 ? '+' + delta : String(delta);
-      var deltaCls  = delta > 0.05 ? 'delta-up' : delta < -0.05 ? 'delta-down' : 'delta-flat';
-      if (deltaCls === 'delta-flat') deltaText = '→';
-
-      html += '<div class="week-metric-row">';
-      html += '<div class="week-metric-label">' + r.label + '</div>';
-      html += '<div class="week-metric-vals">';
-      html += '<div class="week-metric-prev">' + prev2.toFixed(r.key==='qi'||r.key==='pc'?2:1) + r.unit + '</div>';
-      html += '<div class="week-metric-curr">' + curr.toFixed(r.key==='qi'||r.key==='pc'?2:1) + r.unit + '</div>';
-      html += '<div class="week-metric-delta ' + deltaCls + '">' + deltaText + '</div>';
-      html += '</div></div>';
-    });
-    html += '</div>';
-
-    // ── Connection insight narrative ──────────────────────
-    // Find the biggest positive change to call out
-    var bestChange = null, bestDelta = 0;
-    rows.forEach(function(r) {
-      var d = (currMetrics[r.key]||0) - (prevMetrics[r.key]||0);
-      if (d > bestDelta) { bestDelta = d; bestChange = r; }
-    });
-
-    var worstChange = null, worstDelta = 0;
-    rows.forEach(function(r) {
-      var d = (prevMetrics[r.key]||0) - (currMetrics[r.key]||0);
-      if (d > worstDelta) { worstDelta = d; worstChange = r; }
-    });
-
-    var firstName = coach ? coach.split(' ')[0] : 'Coach';
-
-    html += '<div class="connection-card">';
-    html += '<div class="connection-header">Connection insight</div>';
-
-    if (bestChange && bestDelta > 0.1) {
-      var curr2 = currMetrics[bestChange.key].toFixed(bestChange.key==='qi'||bestChange.key==='pc'?2:1);
-      var prev3 = prevMetrics[bestChange.key].toFixed(bestChange.key==='qi'||bestChange.key==='pc'?2:1);
-      html += '<div class="connection-insight">' + firstName + ', your <span>' + bestChange.label + '</span> ';
-      html += 'moved from <span>' + prev3 + '</span> to <span>' + curr2 + bestChange.unit + '</span> — ';
-      html += 'that shift means players are spending more time solving problems rather than waiting for answers. ';
-      html += 'When coaches question more, players report feeling more challenged and more capable.</div>';
-    } else {
-      html += '<div class="connection-insight">' + firstName + ', your metrics are holding steady. ';
-      html += 'Consistency is the foundation — the next step is finding one behaviour to push higher. ';
-      html += 'See your action below.</div>';
-    }
-
-    if (worstChange && worstDelta > 0.1) {
-      html += '<div class="connection-insight" style="margin-top:6px;">';
-      html += 'The area to watch: your <span style="color:#f59e0b;">' + worstChange.label + '</span> ';
-      html += 'dipped slightly. This is normal across sessions — the action card below gives you one thing to try.</div>';
-    }
-    html += '</div>';
-
-  } else if (currMetrics) {
-    // Only one set of sessions — show encouragement
-    html += '<div class="connection-card">';
-    html += '<div class="connection-header">Getting started</div>';
-    html += '<div class="connection-insight">Upload one more session to unlock your week-on-week comparison. ';
-    html += 'After two uploads Voach will show you exactly what is changing in your coaching. ';
-    html += 'See how those changes connect to your players experience.</div>';
-    html += '</div>';
-  }
-
-  // ── Action for next session ───────────────────────────────
-  if (currMetrics) {
-    var actionTitle = '', actionBody = '';
-
-    // Find the metric furthest below benchmark
-    var worstMetric = null, worstRatio = 999;
-    var benchmarks = {openQ:3, qi:0.5, praise:5, pc:3, tactical:8};
-    ['openQ','qi','praise','pc','tactical'].forEach(function(k) {
-      var ratio = (currMetrics[k]||0) / (benchmarks[k]||1);
-      if (ratio < worstRatio) { worstRatio = ratio; worstMetric = k; }
-    });
-
-    var actionMap = {
-      openQ:    {title:'Add one more discovery question per training block',
-                 body:'Before you give the next instruction, pause and ask "What do you notice?" or "What would you do here?" — just once more per block than you did last session.'},
-      qi:       {title:'Replace one instruction with a question',
-                 body:'For every five things you say this session, make at least two of them questions. Count them on your fingers if it helps.'},
-      praise:   {title:'Name one player and one specific action',
-                 body:'At least three times this session: name the player and the action. Not great job — say the name and what they did well.'},
-      tactical: {title:'Reference your Main Principle by name at least three times',
-                 body:'Use the specific language from your session plan — Phase of Play, Player Action, Main Principle. Players connect training language to match moments when you use it consistently.'}
-    };
-
-    if (worstMetric && actionMap[worstMetric]) {
-      actionTitle = actionMap[worstMetric].title;
-      actionBody  = actionMap[worstMetric].body;
-    }
-
-    if (actionTitle) {
-      html += '<div class="action-card">';
-      html += '<div class="action-header">Action for next session</div>';
-      html += '<div class="action-title">' + actionTitle + '</div>';
-      html += '<div class="action-body">' + actionBody + '</div>';
-      html += '</div>';
-    }
-  }
-
-  html += '</div>';
-  return html;
-}
-
-function buildCoachCard(report, ag, rId) {
-  var html = '';
-  var metrics = report.metrics || {}, bms = report.benchmarks || {};
-  var mCards = [
-    {key:'openQ',    label:'Discovery Questions', unit:'/1000w', desc:'How often you guide players to think'},
-    {key:'qi',       label:'Questioning Balance',  unit:'',       desc:'How often you ask vs. tell'},
-    {key:'praise',   label:'Positive Moments',     unit:'/1000w', desc:'How often you reinforce what works'},
-    {key:'pc',       label:'Encouragement Ratio',  unit:' ratio', desc:'Your session climate score'},
-    {key:'tactical', label:'Game Language',         unit:'/1000w', desc:'How much you coach in soccer terms'}
-  ];
-
-  html += '<div class="coach-card-grid">';
-  mCards.forEach(function(m) {
-    var val  = parseFloat(metrics[m.key]) || 0;
-    var bm   = parseFloat(bms[m.key])    || 1;
-    var isOn = val >= bm, isDev = val >= bm * 0.6;
-    var cls  = isOn ? 'green-card' : isDev ? 'amber-card' : 'red-card';
-    var status = isOn ? 'On target' : isDev ? 'Developing' : 'Needs focus';
-    var iId  = 'ci_'+m.key+'_'+rId;
-    var inf  = METRIC_INFO[m.key];
-    html += '<div class="coach-card-metric '+cls+'">';
-    html += '<div class="coach-card-label">'+m.desc+'</div>';
-    html += '<div class="coach-card-val">'+val.toFixed(1)+m.unit+'</div>';
-    html += '<span class="coach-card-status">'+status+'</span>';
-    html += '<button class="metric-info-btn" data-infoid="'+iId+'">ⓘ what does this mean?</button>';
-    if (inf) {
-      var sh = inf.scale.map(function(s){
-        var bg  = s.cls==='green'?'#0a2017':s.cls==='amber'?'#1f1500':'#200a0a';
-        var col = s.cls==='green'?'#22c55e':s.cls==='amber'?'#f59e0b':'#ef4444';
-        return '<div class="metric-info-scale-item" style="background:'+bg+';color:'+col+';">'+s.label+'<br>'+s.range+(inf.unit||'')+'</div>';
-      }).join('');
-      html += '<div class="metric-info-panel" id="'+iId+'">';
-      html += '<div class="metric-info-why">'+inf.why+'</div>';
-      html += '<div class="metric-info-scale">'+sh+'</div>';
-      html += '<div class="metric-info-try"><b>Try this</b>'+inf.try+'</div>';
-      html += '</div>';
-    }
-    html += '</div>';
-  });
-  html += '</div>';
-
-  // Focus cue
-  if (report.focusArea && report.focusArea.title) {
-    html += '<div class="coach-card-cue">';
-    html += '<b>Your focus for next session: '+report.focusArea.title+'</b>';
-    if (report.focusArea.why)   html += report.focusArea.why;
-    if (report.focusArea.quote) html += '<div style="color:#3b82f6;margin-top:6px;font-style:italic;">Try: &ldquo;'+report.focusArea.quote+'&rdquo;</div>';
-    html += '</div>';
-  }
-
-  // Grade badge
-  var gc2 = {A:{bg:'#0a2017',col:'#22c55e'},B:{bg:'#1e3a5f',col:'#93c5fd'},C:{bg:'#1f1500',col:'#f59e0b'},D:{bg:'#200a0a',col:'#ef4444'}}[report.grade||'B']||{bg:'#1e3a5f',col:'#93c5fd'};
-  html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:'+gc2.bg+';border-radius:10px;margin-bottom:8px;">';
-  html += '<div style="font-size:32px;font-weight:700;color:'+gc2.col+';">'+( report.grade||'B')+'</div>';
-  html += '<div>';
-  if (report.profileLabel) html += '<div style="font-size:13px;font-weight:600;color:#f8fafc;">'+report.profileLabel+'</div>';
-  if (report.wentWell)     html += '<div style="font-size:12px;color:#64748b;margin-top:3px;">'+report.wentWell.substring(0,120)+'...</div>';
-  html += '</div></div>';
-
-  return html;
-}
-
-function switchReportView(view, rId, evt) {
-  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
-  var full = document.getElementById('view_full_'+rId);
-  var card = document.getElementById('view_card_'+rId);
-  var btnF = document.getElementById('btn_full_'+rId);
-  var btnC = document.getElementById('btn_card_'+rId);
-  if (full) full.style.display = view==='full' ? 'block' : 'none';
-  if (card) card.style.display = view==='card' ? 'block' : 'none';
-  if (btnF) btnF.classList.toggle('active', view==='full');
-  if (btnC) btnC.classList.toggle('active', view==='card');
-}
-
-function buildQTier(label,count,total,cls){
-  return '<div class="q-tier-row"><div class="q-tier-label">'+label+'</div><div class="q-tier-bar-wrap"><div class="q-tier-bar '+cls+'" style="width:'+Math.round((count/total)*100)+'%"></div></div><div class="q-tier-count">'+count+'</div></div>';
-}
-
-// ── Halftime report (3 sections, ultra brief) ─────────────
-function buildHalftimeReport(report) {
-  var html = '';
-  var grade = report.grade || 'B';
-  var gradeColor = {A:'#86efac',B:'#93c5fd',C:'#fde68a',D:'#fca5a5'}[grade.charAt(0)] || '#f1f5f9';
-
-  // Grade badge
-  html += '<div class="profile-badge">';
-  html += '<div class="session-type-badge badge-game">Half-time</div>';
-  html += '<div class="profile-grade grade-'+grade+'">'+grade+'</div>';
-  html += '<div class="profile-label">'+(report.profileLabel||'')+'</div>';
-  html += '</div>';
-
-  // Strength
-  if (report.wentWell) {
-    html += '<div class="halftime-card">';
-    html += '<div class="halftime-label">✓ What worked</div>';
-    html += '<div class="halftime-evidence">'+report.wentWell+'</div>';
-    html += '</div>';
-  }
-
-  // One focus
-  if (report.focusArea) {
-    html += '<div class="halftime-card" style="border-color:#f59e0b;">';
-    html += '<div class="halftime-label" style="color:#f59e0b;">→ Second half focus</div>';
-    html += '<div class="halftime-strong">'+(report.focusArea.title||'')+'</div>';
-    if (report.focusArea.why) html += '<div class="halftime-evidence">'+report.focusArea.why+'</div>';
-    if (report.focusArea.quote) html += '<div class="insight-box-quote" style="margin-top:8px;">Try: "'+report.focusArea.quote+'"</div>';
-    html += '</div>';
-  }
-
-  if (report.encouragement) html += '<div class="encourage-box" style="margin-top:8px;">'+report.encouragement+'</div>';
-  return html;
-}
-
-// ── Game report (4 sections + NCFC match assessment) ───────
-function buildGameReport(report, canvasId) {
-  var html = '';
-  var grade = report.grade || 'B';
-  var cId = canvasId || 'pieCanvas';
-
-  // Profile badge
-  html += '<div class="profile-badge">';
-  html += '<span class="session-type-badge badge-game">Game</span>';
-  html += '<div class="profile-grade grade-'+grade+'">'+grade+'</div>';
-  html += '<div class="profile-label">'+(report.profileLabel||'')+'</div>';
-  if (report.profileDesc) html += '<div class="profile-desc">'+report.profileDesc+'</div>';
-  html += '</div>';
-
-  if (report.reliabilityWarning) html += '<div class="reliability-note"><strong>📊 Note:</strong> '+report.reliabilityWarning+'</div>';
-
-  // Coaching feedback (strength + focus)
-  if (report.wentWell) { html += '<div class="went-well-box"><div class="insight-box-label" style="color:#22c55e;">✓ What went well</div><div class="insight-box-why">'+report.wentWell+'</div></div>'; }
-  if (report.focusArea) {
-    html += '<div class="focus-box"><div class="insight-box-label" style="color:#f59e0b;">→ Your growth edge</div>';
-    html += '<div class="insight-box-title">'+(report.focusArea.title||'')+'</div>';
-    if (report.focusArea.why) html += '<div class="insight-box-why">'+report.focusArea.why+'</div>';
-    if (report.focusArea.quote) html += '<div class="insight-box-quote">Try: "'+report.focusArea.quote+'"</div>';
-    html += '</div>';
-  }
-  if (report.trendImprovement && report.trendImprovement.title) {
-    html += '<div class="trend-box"><div class="insight-box-label" style="color:#8b5cf6;">📈 Pattern</div>';
-    html += '<div class="insight-box-title">'+(report.trendImprovement.title||'')+'</div>';
-    if (report.trendImprovement.why) html += '<div class="insight-box-why">'+report.trendImprovement.why+'</div>';
-    html += '</div>';
-  }
-
-  // Behaviour pie
-  if (report.behaviorCounts) {
-    html += '<div class="chart-section"><div class="chart-title">Game Coaching Behaviour</div>';
-    html += '<div class="chart-wrap"><canvas id="'+cId+'" width="130" height="130" style="flex-shrink:0;"></canvas><div class="chart-legend">';
-    var bc = report.behaviorCounts;
-    PIE_KEYS.forEach(function(k,i){ html += '<div class="legend-item"><div class="legend-dot" style="background:'+PIE_COLORS[i]+'"></div><span>'+PIE_LABELS[k]+'</span><span class="legend-val">'+(bc[k]||0)+'</span></div>'; });
-    html += '</div></div></div>';
-  }
-
-  // NCFC Match Assessment
-  if (report.matchAssessment) {
-    var ma = report.matchAssessment;
-    var maDefs = [
-      { key:'positiveEnvironment', label:'Positive learning environment' },
-      { key:'clearCommunication',  label:'Clear and concise communication' },
-      { key:'turningErrors',       label:'Turning errors into positive moments' },
-      { key:'questioningApproach', label:'Questions to help players solve match problems' },
-      { key:'ncfcLanguage',        label:'NCFC / US Soccer framework language' }
-    ];
-    var maTotal = maDefs.reduce(function(s,d){ return s + ({green:3,amber:2,red:1}[(ma[d.key]||{}).status]||2); }, 0);
-    var maScore = Math.round((maTotal/(maDefs.length*3))*100);
-    var maColor = maScore>=75?'#22c55e':maScore>=50?'#f59e0b':'#ef4444';
-
-    html += '<div class="t3-section">';
-    html += '<div class="t3-header"><span class="t3-title">NCFC Match Assessment</span>';
-    html += '<span class="t3-score-badge" style="color:'+maColor+';">Match Score: '+maScore+'%</span></div>';
-
-    maDefs.forEach(function(d) {
-      var item = ma[d.key] || { status:'amber', evidence:'' };
-      html += '<div class="t3-row">';
-      html += '<div class="t3-light t3-'+(item.status||'amber')+'"></div>';
-      html += '<div class="t3-content"><div class="t3-criterion">'+d.label+'</div>';
-      if (item.evidence) html += '<div class="t3-evidence">'+item.evidence+'</div>';
-      html += '</div></div>';
-    });
-    html += '</div>';
-  }
-
-  if (report.encouragement) html += '<div class="encourage-box">'+report.encouragement+'</div>';
-  return html;
-}
-
-// ── Pie chart ─────────────────────────────────────────────
-function drawPieChart(id, counts) {
-  var canvas=document.getElementById(id); if(!canvas||!counts) return;
-  var ctx=canvas.getContext('2d');
-  var vals=PIE_KEYS.map(function(k){ return Math.max(0,counts[k]||0); });
-  var total=vals.reduce(function(a,b){return a+b;},0);
-  if(!total){ ctx.fillStyle='#334155'; ctx.beginPath(); ctx.arc(65,65,55,0,Math.PI*2); ctx.fill(); }
-  else{ var start=-Math.PI/2; vals.forEach(function(v,i){ if(!v)return; var sl=(v/total)*Math.PI*2; ctx.beginPath(); ctx.moveTo(65,65); ctx.arc(65,65,55,start,start+sl); ctx.closePath(); ctx.fillStyle=PIE_COLORS[i]; ctx.fill(); start+=sl; }); }
-  ctx.beginPath(); ctx.arc(65,65,28,0,Math.PI*2); ctx.fillStyle='#1e293b'; ctx.fill();
-}
-
-// ── Sparkline canvas ──────────────────────────────────────
-function drawSparkline(id, values, color) {
-  var canvas=document.getElementById(id); if(!canvas) return;
-  var ctx=canvas.getContext('2d'), w=canvas.width, h=canvas.height;
-  ctx.clearRect(0,0,w,h);
-  var valid=values.filter(function(v){return v!==null&&v!==undefined;});
-  if(valid.length<2) return;
-  var mn=Math.min.apply(null,valid), mx=Math.max.apply(null,valid);
-  var range=mx-mn||1;
-  ctx.strokeStyle=color||'#3b82f6'; ctx.lineWidth=1.5; ctx.beginPath();
-  var pts=values.filter(function(v){return v!==null;}); var step=w/(pts.length-1);
-  pts.forEach(function(v,i){
-    var x=i*step, y=h-((v-mn)/range)*(h-4)-2;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-}
-
-// ── Line chart (trend) ────────────────────────────────────
-function drawLineChart(id, datasets, labels, colors) {
-  var canvas=document.getElementById(id); if(!canvas) return;
-  var ctx=canvas.getContext('2d'), w=canvas.width, h=canvas.height-20;
-  ctx.clearRect(0,0,w,canvas.height);
-  var allVals=[]; datasets.forEach(function(d){ d.forEach(function(v){ if(v!==null) allVals.push(v); }); });
-  if(!allVals.length) return;
-  var mn=0, mx=Math.max.apply(null,allVals)*1.1||1;
-  var padL=8, padR=8, padT=4, padB=20;
-  var cw=w-padL-padR, ch=h-padT-padB;
-  var n=labels.length, step=n>1?cw/(n-1):cw;
-  // X labels
-  ctx.fillStyle='#475569'; ctx.font='10px sans-serif'; ctx.textAlign='center';
-  labels.forEach(function(l,i){ ctx.fillText(l, padL+i*step, canvas.height-4); });
-  // Lines
-  datasets.forEach(function(data,di){
-    ctx.strokeStyle=colors[di]||'#3b82f6'; ctx.lineWidth=1.5; ctx.beginPath();
-    var started=false;
-    data.forEach(function(v,i){
-      if(v===null) return;
-      var x=padL+i*step, y=padT+ch-((v-mn)/(mx-mn))*ch;
-      if(!started){ ctx.moveTo(x,y); started=true; } else { ctx.lineTo(x,y); }
-    });
-    ctx.stroke();
-  });
-}
-
-// ── My Sessions ───────────────────────────────────────────
-
-// ── Connection Insight UI ─────────────────────────────────────
-function buildConnectionInsight(insight, coach) {
-  if (!insight) return '';
-  var tw = insight.thisWeek  || {};
-  var lw = insight.lastWeek  || {};
-  var fw = insight.fourWeeks || [];
-  var firstName = (coach||'').split(' ')[0];
-  var html = '<div class="insight-dashboard">';
-
-  // ── This week vs last week ───────────────────────────────
-  html += '<div class="insight-section-label">This week vs last week</div>';
-  html += '<div class="week-compare">';
-
-  function weekCol(label, data, compareData, isThis) {
-    var metricDefs = [
-      {key:'openQ',   name:'Discovery Q', unit:'/1000w'},
-      {key:'qi',      name:'Q:I Balance',  unit:''},
-      {key:'praise',  name:'Pos. Moments', unit:'/1000w'},
-      {key:'pc',      name:'Encouragement',unit:''},
-    ];
-    var out = '<div class="week-col">';
-    out += '<div class="week-col-label">' + label + (data.count ? ' (' + data.count + ' session' + (data.count!==1?'s':'') + ')' : '') + '</div>';
-    if (!data.count) {
-      out += '<div style="font-size:12px;color:#334155;padding:8px 0;">No sessions this period</div>';
-    } else {
-      metricDefs.forEach(function(m) {
-        var val  = parseFloat(data[m.key])||0;
-        var prev = parseFloat(compareData[m.key])||0;
-        var diff = val - prev;
-        var cls  = !isThis || !prev ? 'flat' : diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'flat';
-        var arrow= !isThis || !prev ? '' : diff > 0.05 ? ' ↑' : diff < -0.05 ? ' ↓' : '';
-        out += '<div class="week-metric">';
-        out += '<span class="week-metric-name">' + m.name + '</span>';
-        out += '<span class="week-metric-val ' + cls + '">' + (val > 0 ? val.toFixed(m.key==='qi'?2:1) + m.unit + arrow : '—') + '</span>';
-        out += '</div>';
-      });
-    }
-    out += '</div>';
-    return out;
-  }
-
-  html += weekCol('Last week', lw, tw, false);
-  html += weekCol('This week', tw, lw, true);
-  html += '</div>';
-
-  // ── Connection insight sentences ─────────────────────────
-  if (insight.insights && insight.insights.length > 0) {
-    html += '<div class="connection-card">';
-    html += '<div class="connection-card-label">Connection insight</div>';
-    insight.insights.forEach(function(ins) {
-      html += '<div class="connection-insight-row">' + ins + '</div>';
-    });
-    html += '</div>';
-  }
-
-  // ── Action for next session ──────────────────────────────
-  if (insight.action) {
-    html += '<div class="action-card">';
-    html += '<div class="action-card-label">Your focus for next session</div>';
-    html += '<div class="action-card-metric">' + insight.action.label + '</div>';
-    html += '<div class="action-card-text">' + insight.action.action + '</div>';
-    html += '</div>';
-  }
-
-  // ── 4-week trend chart ───────────────────────────────────
-  if (fw.length >= 2) {
-    var maxVal = Math.max.apply(null, fw.map(function(w){ return w.qi||0; }).filter(function(v){return v>0;}));
-    if (maxVal > 0) {
-      html += '<div class="trend-chart-wrap">';
-      html += '<div class="trend-chart-label">Questioning balance — 4 week trend</div>';
-      html += '<div class="trend-bars">';
-      fw.forEach(function(w, i) {
-        var val = w.qi || 0;
-        var pct = maxVal > 0 ? Math.round((val / Math.max(maxVal * 1.2, 1)) * 100) : 0;
-        var isThis = i === fw.length - 1;
-        html += '<div class="trend-bar-group">';
-        html += '<div class="trend-bar-val">' + (val > 0 ? val.toFixed(2) : '—') + '</div>';
-        html += '<div class="trend-bar ' + (isThis?'active':'') + '" style="height:' + (pct||4) + '%;min-height:4px;"></div>';
-        html += '<div class="trend-bar-label">' + (w.label||'') + '</div>';
-        html += '</div>';
-      });
-      html += '</div></div>';
-    }
-  }
-
-  // ── Player engagement placeholder ───────────────────────
-  html += '<div class="player-engage-card">';
-  html += '<div class="player-engage-label">Player engagement</div>';
-  html += '<div class="player-engage-empty">Player survey coming soon — after each session, your players will rate how fun, challenging, and belonging they felt. That data will appear here alongside your coaching metrics.</div>';
-  html += '</div>';
-
-  html += '</div>';
-  return html;
-}
-
-function loadDashboard() {
-  var coach=sessionStorage.getItem('coachName')||_lastCoach;
-  if(!coach){ document.getElementById('dashboardContent').innerHTML='<div class="empty-state">Log in on the Upload screen first.</div>'; return; }
-  document.getElementById('dashboard-sub').textContent='Season overview — '+coach;
-  document.getElementById('dashboardContent').innerHTML='<div class="loading-inline">Loading...</div>';
-  // Load both history and connection insight in parallel
-  var historyData = null, insightData = null, loaded = 0;
-  function tryRender() {
-    loaded++;
-    if (loaded < 2) return;
-    if(!historyData||!historyData.sessions||!historyData.sessions.length){
-      document.getElementById('dashboardContent').innerHTML='<div class="empty-state">No sessions yet. Upload your first session to get started.</div>';
-      return;
-    }
-    renderDashboard(historyData, coach, insightData);
-  }
-  callBackend('getCoachHistory', [coach],
-    function(data){ historyData=data; tryRender(); },
-    function(){ historyData={}; tryRender(); });
-  callBackend('getConnectionInsight', [coach],
-    function(data){ insightData=data; tryRender(); },
-    function(){ insightData=null; tryRender(); });
-}
-
-function renderDashboard(data, coach) {
-  var html='';
-
-  // ── Connection Insight section ───────────────────────────
-  if (data.sessions && data.sessions.length >= 2) {
-    html += buildConnectionInsight(data.sessions, coach);
-  }
-
-  // Season review button
-  html += '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;">';
-  html += '<button class="download-btn" id="seasonReviewBtn" onclick="generateSeasonReview()" style="font-size:13px;padding:10px 18px;">📄 Season Review PDF</button>';
-  html += '<button class="download-btn" id="certBtn" onclick="downloadSeasonCertificate()" style="font-size:13px;padding:10px 18px;margin-left:8px;">🏅 Season Certificate</button>';
-  html += '</div>';
-  if(data.seasonAvg){
-    var sa=data.seasonAvg, bm={};
-    if(data.sessions&&data.sessions[0]&&data.sessions[0].report&&data.sessions[0].report.benchmarks) bm=data.sessions[0].report.benchmarks;
-    html+='<div class="season-card">';
-    html+='<div class="chart-title" style="color:#93c5fd;">Season Summary — '+sa.sessions+' sessions</div>';
-    html+='<div class="season-stat-row">';
-    html+='<div class="season-stat"><div class="season-stat-num">'+sa.sessions+'</div><div class="season-stat-label">Sessions</div></div>';
-    html+='<div class="season-stat"><div class="season-stat-num">'+sa.openQ.toFixed(1)+'</div><div class="season-stat-label">Avg Discovery Q</div></div>';
-    html+='<div class="season-stat"><div class="season-stat-num">'+sa.qi.toFixed(2)+'</div><div class="season-stat-label">Avg Q:I</div></div>';
-    html+='<div class="season-stat"><div class="season-stat-num">'+sa.praise.toFixed(1)+'</div><div class="season-stat-label">Avg Praise</div></div>';
-    html+='</div>';
-    if(sa.behaviorCounts){ var bcT=PIE_KEYS.reduce(function(s,k){return s+(sa.behaviorCounts[k]||0);},0); if(bcT>0){
-      html+='<div class="chart-title" style="margin-top:16px;">Average Behaviour Mix</div>';
-      html+='<div class="chart-wrap"><canvas id="seasonPieCanvas" width="120" height="120" style="flex-shrink:0;"></canvas><div class="chart-legend">';
-      PIE_KEYS.forEach(function(k,i){ html+='<div class="legend-item"><div class="legend-dot" style="background:'+PIE_COLORS[i]+'"></div><span>'+PIE_LABELS[k]+'</span><span class="legend-val">'+(sa.behaviorCounts[k]||0)+'</span></div>'; });
-      html+='</div></div>';
-    }}
-    html+='<div class="chart-title" style="margin-top:16px;">Average Metrics</div><div class="metrics-grid">';
-    METRIC_DEFS.forEach(function(m){
-      var val=parseFloat(sa[m.key])||0, bmVal=parseFloat(bm[m.key])||1;
-      var pct=Math.min(93,(val/m.max)*100), bmPct=Math.min(93,(bmVal/m.max)*100);
-      var isOn=val>=bmVal,isDev=val>=bmVal*0.6;
-      var barCls=isOn?'bar-green':isDev?'bar-amber':'bar-red';
-      var stCls=isOn?'on-target':isDev?'developing':'needs-focus';
-      html+='<div class="metric-block"><div class="metric-top"><div class="metric-name">'+m.label+'</div><div class="metric-val">'+val.toFixed(1)+m.unit+'</div></div>';
-      html+='<div class="metric-bar-wrap"><div class="metric-bar '+barCls+'" style="width:'+pct.toFixed(1)+'%"></div><div class="bm-tick" style="left:'+bmPct.toFixed(1)+'%"></div></div>';
-      html+='<div class="metric-target '+stCls+'">'+(isOn?'On target':isDev?'Developing':'Below target')+'</div></div>';
-    });
-    html+='</div></div>';
-  }
-  if(data.cumulativePlayers&&data.cumulativePlayers.length){
-    var maxC=data.cumulativePlayers[0].count||1;
-    html+='<div class="divider-label">Players coached most this season</div><div class="card">';
-    data.cumulativePlayers.forEach(function(p,i){ html+='<div class="player-row"><div class="player-rank">'+(i+1)+'</div><div class="player-name">'+p.name+'</div><div class="player-bar-wrap"><div class="player-bar" style="width:'+Math.round((p.count/maxC)*100)+'%"></div></div><div class="player-count">'+p.count+'x</div></div>'; });
-    html+='</div>';
-  }
-  _sessionReportCache = {};
-  if(data.sessions&&data.sessions.length){
-    html+='<div class="divider-label">Session history</div>';
-    data.sessions.forEach(function(s,i){
-      var gc=s.grade?'hgrade-'+s.grade.charAt(0):'hgrade-X';
-      var gd=s.grade?s.grade.charAt(0):'–';
-      var cardId='scard-'+i;
-      var stBadge=s.sessionType&&s.sessionType!=='Training'?'<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#3b0764;color:#d8b4fe;margin-left:6px;">'+s.sessionType+'</span>':'';
-      html+='<div class="session-card" id="'+cardId+'">';
-      html+='<div class="session-card-header" onclick="toggleSessionCard(\''+cardId+'\')">';
-      html+='<div class="history-grade '+gc+'">'+gd+'</div>';
-      html+='<div class="session-card-info"><div class="history-date">'+(s.date||'—')+(s.ageGroup?' · '+s.ageGroup:'')+stBadge+'</div>';
-      if(s.profileLabel) html+='<div class="history-profile">'+s.profileLabel+'</div>';
-      html+='<div class="history-objective">'+(s.objective||'No objective recorded')+'</div>';
-      html+='<div class="pill-row">';
-      if(s.qiStatus)   html+=makePill('Questioning',s.qiStatus);
-      if(s.pcStatus)   html+=makePill('Encouragement',s.pcStatus);
-      if(s.tactStatus) html+=makePill('Game Language',s.tactStatus);
-      html+='</div></div><div class="session-chevron">▾</div></div>';
-      html+='<div class="session-card-detail">';
-      if(s.report){
-        var cId='pie-s'+i;
-        html+=buildReportHTML(s.report,s.ageGroup,cId);
-        if(s.feedback&&(s.feedback.rating||s.feedback.accurate)){
-          html+='<div style="background:#0f172a;border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:#64748b;">';
-          if(s.feedback.rating) html+='<span style="color:#f59e0b;">'+('★').repeat(parseInt(s.feedback.rating))+'</span> ';
-          if(s.feedback.accurate) html+='<span style="color:'+(s.feedback.accurate==='yes'?'#22c55e':'#ef4444')+'">'+(s.feedback.accurate==='yes'?'Marked accurate':'Marked inaccurate')+'</span>';
-          if(s.feedback.comment) html+='<div style="margin-top:4px;color:#475569;">'+s.feedback.comment+'</div>';
-          html+='</div>';
-        }
-        _sessionReportCache[i] = {report: s.report, coach: coach, ageGroup: s.ageGroup, date: s.date};
-        html+='<button class="download-btn" onclick="triggerPDFFromCache('+i+')">⬇&nbsp; Download This Report</button>';
-        html+='<button class="reset-btn" style="color:#ef4444;border-color:#7f1d1d;margin-top:8px;" onclick="confirmDeleteSession('+s.rowNum+',this)">Delete this session</button>';
-      } else { html+='<div class="empty-state" style="padding:20px;">Full report not available.</div>'; }
-      html+='</div></div>';
-    });
-  }
-  document.getElementById('dashboardContent').innerHTML=html;
-  setTimeout(function(){
-    if(data.seasonAvg&&data.seasonAvg.behaviorCounts) drawPieChart('seasonPieCanvas',data.seasonAvg.behaviorCounts);
-    if(data.sessions) data.sessions.forEach(function(s,i){ if(s.report&&s.report.behaviorCounts) drawPieChart('pie-s'+i,s.report.behaviorCounts); });
-  },150);
-}
-
-function toggleSessionCard(id){ var c=document.getElementById(id); if(c) c.classList.toggle('expanded'); }
-
-function confirmDeleteSession(rowNum, btn) {
-  if (!rowNum) { alert('Cannot delete — session row not found.'); return; }
-  if (!confirm('Delete this session? It will be removed from your history. This cannot be undone.')) return;
-  btn.textContent = 'Deleting...';
-  btn.disabled = true;
-  // Find the parent session card
-  var card = btn.closest ? btn.closest('.session-card') : null;
-  callBackend('deleteSession', [_lastCoach || sessionStorage.getItem('coachName'), rowNum],
-    function(r) {
-      if (r && r.success) {
-        if (card) {
-          card.style.transition = 'opacity 0.3s';
-          card.style.opacity = '0';
-          setTimeout(function(){ card.remove(); }, 300);
-        }
-      } else {
-        btn.textContent = 'Delete this session';
-        btn.disabled = false;
-        alert(r ? r.error : 'Error deleting session.');
-      }
-    },
-    function(e) {
-      btn.textContent = 'Delete this session';
-      btn.disabled = false;
-      alert('Error: ' + (e.message || String(e)));
-    });
-}
-function makePill(label,status){ var cls=status==='On Target'?'pill-green':status==='Developing'?'pill-amber':'pill-red'; return '<span class="pill '+cls+'">'+label+'</span>'; }
-
-// ── Director ──────────────────────────────────────────────
-function resetDirectorGate(){
-  document.getElementById('director-pin-gate').style.display='block';
-  document.getElementById('director-view').style.display='none';
-  document.getElementById('directorPin').value='';
-  document.getElementById('pinError').style.display='none';
-  _dirProgram=null; _dirSuperAdmin=false;
-}
-function checkDirectorPin(){
-  var entered=document.getElementById('directorPin').value.trim();
-  if(!entered) return;
-  document.getElementById('pinError').style.display='none';
-  callBackend('checkDirectorPin', [entered],
-    function(result){
-      if(result&&result.valid){
-        _dirSuperAdmin = result.isSuperAdmin;
-        _dirProgram    = result.program;
-        document.getElementById('director-pin-gate').style.display='none';
-        document.getElementById('director-view').style.display='block';
-        document.getElementById('directorTitle').textContent = result.isSuperAdmin ? 'Director Overview — All Programs' : 'Director — '+result.program;
-        if(result.isSuperAdmin){
-          var sel=document.getElementById('programSelector');
-          sel.style.display='block';
-          var btns='<button class="prog-btn active" onclick="filterDirProgram(null,this)">All</button>';
-          PROGRAMS.forEach(function(p){ btns+='<button class="prog-btn" onclick="filterDirProgram(\''+p+'\',this)">'+p+'</button>'; });
-          sel.innerHTML='<div class="prog-selector">'+btns+'</div>';
-        }
-        loadDirectorData(_dirProgram);
-      } else {
-        document.getElementById('pinError').style.display='block';
-        document.getElementById('directorPin').value='';
-      }
-    },
-    function(){ document.getElementById('pinError').style.display='block'; });
-}
-function filterDirProgram(prog, btn){
-  _dirProgram=prog;
-  document.querySelectorAll('.prog-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  loadDirectorData(prog);
-}
-function showDirPanel(name, btn){
-  document.querySelectorAll('.dir-panel').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.dir-tab').forEach(function(b){ b.classList.remove('active'); });
-  document.getElementById('dir-panel-'+name).classList.add('active');
-  btn.classList.add('active');
-}
-function loadDirectorData(program){
-  // Load both dashboard and coaches panel
-  document.getElementById('dir-panel-dashboard').innerHTML='<div class="loading-inline">Loading...</div>';
-  document.getElementById('dir-panel-coaches').innerHTML='<div class="loading-inline">Loading...</div>';
-  callBackend('getDirectorDashboard', [program],
-    function(dash){ renderDirDashboard(dash, program); },
-    function(e){ document.getElementById('dir-panel-dashboard').innerHTML='<div class="empty-state">Error loading dashboard.</div>'; });
-  callBackend('getDirectorViewForProgram', [program],
-    function(data){ renderDirCoaches(data, program); },
-    function(e){ document.getElementById('dir-panel-coaches').innerHTML='<div class="empty-state">Error loading coaches.</div>'; });
-  renderGoalsPanel(program);
-  renderReportsPanel(program);
-}
-
-function renderDirDashboard(dash, program) {
-  if(!dash){ document.getElementById('dir-panel-dashboard').innerHTML='<div class="empty-state">No data yet for this program.</div>'; return; }
-  var html='';
-
-  // ── Summary stats ──
-  var overdue = dash.uploadFrequency.filter(function(c){return c.status==='overdue';}).length;
-  var recent  = dash.uploadFrequency.filter(function(c){return c.status==='recent';}).length;
-  var avgTScore = dash.avgTeachingScore;
-  var tsColor   = avgTScore>=75?'#22c55e':avgTScore>=50?'#f59e0b':'#ef4444';
-  html+='<div class="summary-stats">';
-  html+='<div class="stat-box"><div class="stat-num">'+dash.totalCoaches+'</div><div class="stat-label">Coaches</div></div>';
-  html+='<div class="stat-box"><div class="stat-num green">'+recent+'</div><div class="stat-label">Active (7d)</div></div>';
-  html+='<div class="stat-box"><div class="stat-num" style="color:'+(overdue>0?'#ef4444':'#f8fafc')+'">'+overdue+'</div><div class="stat-label">Overdue</div></div>';
-  html+='<div class="stat-box"><div class="stat-num" style="color:'+(avgTScore?tsColor:'#f8fafc')+'">'+(avgTScore!==null?avgTScore+'%':'—')+'</div><div class="stat-label">Avg Teaching</div></div>';
-  html+='</div>';
-
-  // ── Average coaching behaviour pie (matches coach view style) ──
-  // Aggregate behaviorCounts from trendData using raw session totals
-  // We store these in dash.behaviorTotals if available, else skip
-  if(dash.behaviorTotals){
-    var bcTotal = PIE_KEYS.reduce(function(s,k){ return s+(dash.behaviorTotals[k]||0); }, 0);
-    if(bcTotal > 0){
-      html+='<div class="chart-card">';
-      html+='<div class="chart-card-title">Program Coaching Behaviour Mix</div>';
-      html+='<div class="chart-wrap"><canvas id="dirPieCanvas" width="130" height="130" style="flex-shrink:0;"></canvas>';
-      html+='<div class="chart-legend">';
-      PIE_KEYS.forEach(function(k,i){
-        var v=dash.behaviorTotals[k]||0;
-        var pct=bcTotal>0?Math.round((v/bcTotal)*100):0;
-        html+='<div class="legend-item"><div class="legend-dot" style="background:'+PIE_COLORS[i]+'"></div>';
-        html+='<span>'+PIE_LABELS[k]+'</span>';
-        html+='<span class="legend-val">'+pct+'%</span></div>';
-      });
-      html+='</div></div></div>';
-    }
-  }
-
-  // ── Average metric bars (matches coach view style exactly) ──
-  if(dash.avgMetrics){
-    var progLabel = program || 'Program';
-    html+='<div class="chart-card">';
-    html+='<div class="chart-card-title">'+progLabel+' Average Metrics</div>';
-    html+='<div class="legend-key">';
-    html+='<span class="legend-key-item"><span class="lk-line" style="background:#475569;"></span> Benchmark</span>';
-    html+='</div>';
-    html+='<div class="metrics-grid">';
-    METRIC_DEFS.forEach(function(m){
-      var val   = parseFloat(dash.avgMetrics[m.key]) || 0;
-      var bmVal = parseFloat(dash.avgBenchmarks[m.key]) || 1;
-      var pct   = Math.min(93,(val/m.max)*100);
-      var bmPct = Math.min(93,(bmVal/m.max)*100);
-      var isOn  = val>=bmVal, isDev = val>=bmVal*0.6;
-      var barCls = isOn?'bar-green':isDev?'bar-amber':'bar-red';
-      var stCls  = isOn?'on-target':isDev?'developing':'needs-focus';
-      var stTxt  = isOn?'Program avg on target':isDev?'Developing — avg target ':'Below target — avg aim for ';
-      html+='<div class="metric-block">';
-      html+='<div class="metric-top"><div class="metric-name">'+m.label+'</div>';
-      html+='<div class="metric-val">'+val.toFixed(1)+m.unit+'</div></div>';
-      html+='<div class="metric-bar-wrap">';
-      html+='<div class="metric-bar '+barCls+'" style="width:'+pct.toFixed(1)+'%"></div>';
-      html+='<div class="bm-tick" style="left:'+bmPct.toFixed(1)+'%"></div>';
-      html+='</div>';
-      html+='<div class="metric-target '+stCls+'">'+stTxt+bmVal.toFixed(1)+m.unit+'</div>';
-      html+='</div>';
-    });
-    html+='</div></div>';
-  }
-
-  // ── 3T Teaching Heatmap ──
-  var T3_COL_DEFS = [
-    { key:'positiveEnv',        label:'Positive env.' },
-    { key:'playerAutonomy',     label:'Autonomy' },
-    { key:'technicalInfo',      label:'Tech. info' },
-    { key:'individualCoaching', label:'Individual' },
-    { key:'clearInstruction',   label:'Instruction' },
-    { key:'playerConfidence',   label:'Confidence' }
-  ];
-  if (dash.teachingHeatmap && dash.teachingHeatmap.length) {
-    html+='<div class="chart-card"><div class="chart-card-title">3T Teaching Heatmap — All Coaches</div>';
-    html+='<div style="font-size:11px;color:#475569;margin-bottom:8px;display:flex;gap:12px;">';
-    html+='<span>'+dot('tl-green')+' Green</span><span>'+dot('tl-amber')+' Amber</span><span>'+dot('tl-red')+' Red</span></div>';
-    if (dash.avgTeachingScore !== null) {
-      var atColor = dash.avgTeachingScore>=75?'#22c55e':dash.avgTeachingScore>=50?'#f59e0b':'#ef4444';
-      html+='<div style="font-size:13px;margin-bottom:12px;">Program avg Teaching Score: <strong style="color:'+atColor+';">'+dash.avgTeachingScore+'%</strong></div>';
-    }
-    html+='<div style="overflow-x:auto;"><table class="heatmap-table"><tr><th style="text-align:left;min-width:80px;"></th>';
-    T3_COL_DEFS.forEach(function(d){ html+='<th style="font-size:10px;">'+d.label+'</th>'; });
-    html+='</tr>';
-    dash.teachingHeatmap.forEach(function(row){
-      html+='<tr><td class="coach-name-cell">'+row.name+'</td>';
-      T3_COL_DEFS.forEach(function(d){ html+='<td><span class="hm-dot hm-'+(row[d.key]||'gray')+'"></span></td>'; });
-      html+='</tr>';
-    });
-    html+='</table></div></div>';
-  }
-
-  // ── Coach trend ranking ──
-  html+='<div class="chart-card"><div class="chart-card-title">Coach Development Trends</div>';
-  if(dash.coachTrends.length){
-    dash.coachTrends.forEach(function(c){
-      var icon  = c.direction==='improving'?'↑':c.direction==='declining'?'↓':'→';
-      var color = c.direction==='improving'?'#22c55e':c.direction==='declining'?'#ef4444':'#64748b';
-      var badge = c.direction==='improving'?'Improving':c.direction==='declining'?'Declining':'Stable';
-      var badgeBg = c.direction==='improving'?'#14532d':c.direction==='declining'?'#7f1d1d':'#1e293b';
-      html+='<div class="trend-rank-row">';
-      html+='<span class="trend-icon" style="color:'+color+'">'+icon+'</span>';
-      html+='<span class="trend-name">'+c.name+'</span>';
-      html+='<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+badgeBg+';color:'+color+';">'+badge+'</span>';
-      html+='<span class="trend-delta" style="color:'+color+';">'+(c.trend>0?'+':'')+Math.round(c.trend*100)+'%</span>';
-      html+='</div>';
-    });
-  } else {
-    html+='<div style="font-size:13px;color:#475569;text-align:center;padding:16px;">Upload more sessions to see trend data.</div>';
-  }
-  html+='</div>';
-
-  // ── Upload frequency ──
-  html+='<div class="chart-card"><div class="chart-card-title">Upload Frequency</div>';
-  dash.uploadFrequency.forEach(function(c){
-    var badge = c.status==='recent'?'freq-badge-green':c.status==='due'?'freq-badge-amber':'freq-badge-red';
-    var label = c.status==='recent'?'Active':c.status==='due'?'Due soon':'Overdue';
-    var dayTxt = c.daysSince===999?'Never':c.daysSince+'d ago';
-    html+='<div class="freq-row">';
-    html+='<span class="freq-name">'+c.name+'</span>';
-    html+='<span class="freq-days '+(c.status==='recent'?'freq-green':c.status==='due'?'freq-amber':'freq-red')+'">'+dayTxt+'</span>';
-    html+='<span class="freq-badge '+badge+'">'+label+'</span>';
-    html+='<span style="font-size:11px;color:#475569;">'+c.sessions+'&nbsp;sessions</span>';
-    html+='</div>';
-  });
-  html+='</div>';
-
-  // ── Session type breakdown ──
-  html+='<div class="chart-card"><div class="chart-card-title">Session Type Breakdown</div>';
-  var typeColors={'Training':'#3b82f6','Team Meeting':'#6ee7b7','Game':'#d8b4fe','Half-time':'#fde68a','Post-game':'#93c5fd'};
-  var typeTotal=Object.values(dash.typeBreakdown).reduce(function(a,b){return a+b;},0)||1;
-  Object.keys(dash.typeBreakdown).forEach(function(t){
-    var v=dash.typeBreakdown[t]; if(!v) return;
-    var pct=Math.round((v/typeTotal)*100);
-    html+='<div class="dir-metric-row">';
-    html+='<div class="dir-metric-name" style="font-size:12px;color:#94a3b8;">'+t+'</div>';
-    html+='<div class="dir-metric-bar-wrap"><div class="dir-metric-bar" style="height:100%;border-radius:3px;min-width:3px;width:'+pct+'%;background:'+(typeColors[t]||'#64748b')+'"></div></div>';
-    html+='<div class="dir-metric-val" style="color:#f1f5f9;font-size:12px;">'+v+'</div>';
-    html+='</div>';
-  });
-  html+='</div>';
-
-  document.getElementById('dir-panel-dashboard').innerHTML=html;
-
-  // Draw pie after render
-  setTimeout(function(){
-    if(dash.behaviorTotals) drawPieChart('dirPieCanvas', dash.behaviorTotals);
-  },100);
-}
-
-function renderDirectorCoaches(data) {
-  if(!data||!data.coaches||!data.coaches.length){
-    document.getElementById('dir-panel-coaches').innerHTML='<div class="empty-state">No coaches found.</div>'; return;
-  }
-  var coaches=data.coaches, html='<p class="tap-hint">Tap a coach to expand detail</p>';
-  coaches.forEach(function(c,i){
-    var grade=c.grade?c.grade.charAt(0):null, gc=grade?'hgrade-'+grade:'hgrade-X';
-    var prompts=getFollowUpPrompts(c), rowId='drow-'+i;
-    html+='<div class="director-row" id="'+rowId+'" onclick="toggleDirectorRow(\''+rowId+'\')">';
-    html+='<div class="director-row-header"><div class="director-rank">'+(i+1)+'</div>';
-    html+='<div class="director-grade '+gc+'">'+(grade||'–')+'</div>';
-    html+='<div class="director-info"><div class="director-name">'+c.name;
-    if(c.program) html+=' <span class="program-badge">'+c.program+'</span>';
-    html+='</div>';
-    if(c.profileLabel) html+='<div class="director-profile">'+c.profileLabel+'</div>';
-    html+='<div class="director-meta">'+(c.sessions||0)+' sessions'+(c.lastDate?' · '+c.lastDate:'')+(c.ageGroup?' · '+c.ageGroup:'')+'</div></div>';
-    html+='<div class="director-right"><div class="traffic-lights">';
-    html+='<div class="tl-dot '+dotCls(c.qiStatus)+'"></div>';
-    html+='<div class="tl-dot '+dotCls(c.pcStatus)+'"></div>';
-    html+='<div class="tl-dot '+dotCls(c.tactStatus)+'"></div>';
-    html+='</div><div class="expand-chevron">▾</div></div></div>';
-    // Detail panel
-    html+='<div class="director-detail">';
-    if(c.profileDesc) html+='<div class="detail-section"><div class="detail-label">Framework Profile</div><div class="profile-desc-row">'+c.profileDesc+'</div></div>';
-    // Teaching Score trend + criteria breakdown
-    html+='<div class="detail-section"><div class="detail-label">3T Teaching Assessment — Last Session</div>';
-    html+='<div id="t3detail-'+i+'"><div style="font-size:12px;color:#475569;padding:8px 0;">Loading...</div></div>';
-    html+='</div>';
-    // Metrics vs targets
-    if(c.metrics&&c.benchmarks){
-      html+='<div class="detail-section"><div class="detail-label">Last session metrics</div>';
-      METRIC_DEFS.forEach(function(m){
-        var val=parseFloat(c.metrics[m.key])||0, bm=parseFloat(c.benchmarks[m.key])||1;
-        var pct=Math.min(94,(val/m.max)*100), bmPct=Math.min(94,(bm/m.max)*100);
-        var isOn=val>=bm,isDev=val>=bm*0.6;
-        var barCls=isOn?'bar-green':isDev?'bar-amber':'bar-red', valCls=isOn?'val-green':isDev?'val-amber':'val-red';
-        html+='<div class="dir-metric-row"><div class="dir-metric-name">'+m.shortLabel+'</div>';
-        html+='<div class="dir-metric-bar-wrap"><div class="dir-metric-bar '+barCls+'" style="width:'+pct.toFixed(1)+'%"></div><div class="dir-bm-tick" style="left:'+bmPct.toFixed(1)+'%"></div></div>';
-        html+='<div class="dir-metric-val '+valCls+'">'+val.toFixed(1)+'<span style="font-size:9px;color:#475569;">/'+bm.toFixed(1)+'</span></div></div>';
-      });
-      html+='</div>';
-    }
-    // Follow-up
-    html+='<div class="detail-section"><div class="detail-label">Suggested Follow-Up</div><div class="followup-list">';
-    if(prompts.length){ prompts.forEach(function(p){ html+='<div class="followup-item"><div class="followup-dot" style="background:'+(p.level==='red'?'#ef4444':'#f59e0b')+'"></div><div class="followup-text"><strong>'+p.name+':</strong> '+p.ask+'</div></div>'; }); }
-    else { html+='<div class="followup-item"><div class="followup-dot" style="background:#22c55e"></div><div class="followup-text"><strong>All metrics on target</strong> — keep going.</div></div>'; }
-    html+='</div></div>';
-    if(c.objective) html+='<div class="detail-section"><div class="detail-label">Last Objective</div><div class="profile-desc-row" style="color:#94a3b8;">'+c.objective+'</div></div>';
-
-    // Conversation log
-    html+='<div class="detail-section"><div class="detail-label">Conversation Log</div>';
-    html+='<div style="display:flex;gap:8px;margin-bottom:10px;">';
-    html+='<input type="text" id="convNote-'+i+'" placeholder="Log a development conversation..." style="flex:1;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#f1f5f9;font-size:13px;padding:8px 12px;margin-bottom:0;">';
-    html+='<button onclick="logConversation(this)" data-coach="'+c.name+'" data-input="convNote-'+i+'" style="background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Log</button>';
-    html+='</div>';
-    html+='<div id="convLog-'+i+'"><div class="loading-inline" style="padding:8px;font-size:12px;">Loading...</div></div>';
-    html+='</div>';
-
-    html+='</div></div>';
-  });
-  document.getElementById('dir-panel-coaches').innerHTML=html;
-  // Load sparklines for each coach
-  coaches.forEach(function(c,i){
-    callBackend('getCoachSparklineData', [c.name, c.program||null],
-      function(rows){ renderSparkline(rows, i); },
-      function(){});
-    // Load conversation log
-    (function(coachName, idx){
-      callBackend('getConversationLog', [coachName],
-        function(logs){ renderConvLog(logs, idx); },
-        function(){});
-    })(c.name, i);
-  });
-}
-
-function logConversation(btn) {
-  var coachName = btn.getAttribute('data-coach');
-  var inputId = btn.getAttribute('data-input');
-  var note = document.getElementById(inputId) ? document.getElementById(inputId).value.trim() : '';
-  if (!note) return;
-  callBackend('logDirectorConversation', [_adminPin||'', coachName, note],
-    function(r){
-      if (r && r.success) {
-        document.getElementById(inputId).value = '';
-        // Reload the log
-        var idx = inputId.replace('convNote-','');
-        callBackend('getConversationLog', [coachName],
-          function(logs){ renderConvLog(logs, idx); },
-          function(){});
-      } else { alert(r ? r.error : 'Error logging conversation.'); }
-    },
-    function(){});
-}
-function renderConvLog(logs, idx) {
-  var el = document.getElementById('convLog-'+idx);
-  if (!el) return;
-  if (!logs || !logs.length) {
-    el.innerHTML = '<div style="font-size:12px;color:#334155;padding:6px 0;">No conversations logged yet.</div>';
-    return;
-  }
-  var html = '';
-  logs.forEach(function(log){
-    html += '<div style="background:#0f172a;border-radius:8px;padding:8px 12px;margin-bottom:6px;">' +
-      '<div style="font-size:11px;color:#475569;margin-bottom:3px;">' + log.date + '</div>' +
-      '<div style="font-size:12px;color:#94a3b8;line-height:1.5;">' + log.note + '</div>' +
-      '</div>';
-  });
-  el.innerHTML = html;
-}
-
-function renderCoachTeaching(rows, coachIdx) {
-  var el = document.getElementById('t3detail-'+coachIdx);
-  if (!el) return;
-  if (!rows || !rows.length) { el.innerHTML='<div style="font-size:12px;color:#475569;">No sessions yet.</div>'; return; }
-
-  // Get latest session with teachingAssessment
-  var latest = null;
-  for (var i = rows.length-1; i >= 0; i--) {
-    if (rows[i].teachingAssessment) { latest = rows[i]; break; }
-  }
-  // Build Teaching Score trend
-  var scores = rows.map(function(r){ return r.teachingScore||null; }).filter(function(v){ return v!==null; });
-  var latestScore = latest ? (latest.teachingScore||null) : null;
-  var prevScore   = scores.length >= 2 ? scores[scores.length-2] : null;
-  var trend = latestScore && prevScore ? (latestScore > prevScore ? '↑' : latestScore < prevScore ? '↓' : '→') : '';
-  var trendColor = trend==='↑'?'#22c55e':trend==='↓'?'#ef4444':'#64748b';
-
-  var html = '';
-  // Teaching Score headline
-  if (latestScore !== null) {
-    var scoreColor = latestScore>=75?'#22c55e':latestScore>=50?'#f59e0b':'#ef4444';
-    html += '<div style="display:flex;align-items:center;gap:10px;background:#0f172a;border-radius:10px;padding:10px 14px;margin-bottom:10px;">';
-    html += '<div style="font-size:28px;font-weight:800;color:'+scoreColor+';">'+latestScore+'%</div>';
-    html += '<div><div style="font-size:12px;font-weight:600;color:#f1f5f9;">Teaching Score</div>';
-    html += '<div style="font-size:11px;color:#475569;">Last session</div></div>';
-    if (trend) html += '<div style="font-size:18px;color:'+trendColor+';margin-left:auto;">'+trend+'</div>';
-    html += '</div>';
-  }
-
-  // Criteria breakdown
-  var T3_DEFS = [
-    { key:'positiveEnv',        label:'Positive learning environment' },
-    { key:'playerAutonomy',     label:'Player autonomy & check for understanding' },
-    { key:'technicalInfo',      label:'Key technical information' },
-    { key:'individualCoaching', label:'Individual coaching moments' },
-    { key:'clearInstruction',   label:'Clear and concise instruction' },
-    { key:'playerConfidence',   label:'Players playing with confidence' }
-  ];
-  if (latest && latest.teachingAssessment) {
-    var ta = latest.teachingAssessment;
-    T3_DEFS.forEach(function(d) {
-      var item   = ta[d.key] || { status:'gray', evidence:'' };
-      var status = item.status || 'gray';
-      var color  = status==='green'?'#22c55e':status==='amber'?'#f59e0b':status==='red'?'#ef4444':'#334155';
-      html += '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #0f172a;">';
-      html += '<div style="width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0;margin-top:4px;"></div>';
-      html += '<div style="flex:1;"><div style="font-size:12px;color:#f1f5f9;font-weight:500;">'+d.label+'</div>';
-      if (item.evidence) html += '<div style="font-size:11px;color:#475569;line-height:1.4;margin-top:2px;">'+item.evidence+'</div>';
-      html += '</div></div>';
-    });
-  } else {
-    html += '<div style="font-size:12px;color:#475569;">Teaching assessment not yet available — upload more sessions.</div>';
-  }
-  el.innerHTML = html;
-}
-
-function toggleDirectorRow(id){ var r=document.getElementById(id); if(r) r.classList.toggle('expanded'); }
-function getFollowUpPrompts(c){
-  var prompts=[],bm=c.benchmarks||{},m=c.metrics||{};
-  [{key:'qi',name:'Questioning Balance',ask:'Balance questions vs instructions.'},{key:'openQ',name:'Discovery Questions',ask:'Pause before directing — ask the player first.'},{key:'pc',name:'Encouragement Ratio',ask:'Aim for 2 positives per correction.'},{key:'praise',name:'Positive Moments',ask:'Name players when praising.'},{key:'tactical',name:'Game Language',ask:'Use age-appropriate tactical vocabulary.'}].forEach(function(ch){
-    var val=parseFloat(m[ch.key])||0,tgt=parseFloat(bm[ch.key])||1;
-    if(val<tgt*0.6) prompts.push({level:'red',name:ch.name,ask:ch.ask});
-    else if(val<tgt) prompts.push({level:'amber',name:ch.name,ask:ch.ask});
-  });
-  return prompts;
-}
-function dot(cls){ return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:3px;" class="'+cls+'"></span>'; }
-function dotCls(s){ return s==='On Target'?'tl-green':s==='Developing'?'tl-amber':s==='Needs Focus'?'tl-red':'tl-gray'; }
-
-// ── Admin ─────────────────────────────────────────────────
-function resetAdminGate(){
-  document.getElementById('admin-pin-gate').style.display='block';
-  document.getElementById('admin-view').style.display='none';
-  document.getElementById('adminPin').value='';
-  document.getElementById('adminPinError').style.display='none';
-  _adminPin='';
-}
-function doAdminLogin(){
-  var pin=document.getElementById('adminPin').value.trim();
-  if(!pin) return;
-  document.getElementById('adminPinError').style.display='none';
-  callBackend('getAdminView', [pin],
-    function(data){
-      if(data&&!data.error){
-        _adminPin=pin;
-        document.getElementById('admin-pin-gate').style.display='none';
-        document.getElementById('admin-view').style.display='block';
-        renderAdmin(data);
-      } else {
-        document.getElementById('adminPinError').style.display='block';
-        document.getElementById('adminPinError').textContent=data?data.error:'Incorrect PIN.';
-        document.getElementById('adminPin').value='';
-      }
-    },
-    function(){ document.getElementById('adminPinError').style.display='block'; });
-}
-
-function renderAdmin(data) {
-  var html='';
-  // Director PIN management
-  html+='<div class="card"><label class="eyebrow">Director PINs</label>';
-  html+='<div class="pin-mgmt-row" style="font-size:11px;color:#475569;padding-bottom:4px;"><span style="flex:1;">Program</span><span style="width:80px;text-align:center;">Email</span><span style="width:60px;text-align:center;">PIN</span><span style="width:60px;"></span></div>';
-  ['Recreation','Challenge','Juniors','Classic','NPL','ECNL-RL','ECNL','Academy'].forEach(function(prog){
-    var pPin = data.programPins ? (data.programPins[prog]||'(not set)') : '(not set)';
-    var dirEmail = data.directorEmails ? (data.directorEmails[prog]||'') : '';
-    html+='<div class="pin-mgmt-row"><span class="pin-mgmt-label">'+prog+'</span>';
-    html+='<input type="email" id="dirEmail-'+prog+'" value="'+dirEmail+'" placeholder="director@email.com" style="flex:1;background:#0f172a;border:1px solid #334155;border-radius:6px;color:#f1f5f9;font-size:11px;padding:4px 8px;margin:0 6px;">';
-    html+='<button class="pin-set-btn" onclick="saveDirEmail(\''+prog+'\')" style="margin-right:4px;">Email</button>';
-    html+='<button class="pin-set-btn" onclick="promptSetPin(\''+prog+'\')"  >PIN</button></div>';
-  });
-  html+='<div class="pin-mgmt-row"><span class="pin-mgmt-label" style="color:#f59e0b;">Super-admin PIN</span><span class="pin-mgmt-val">••••</span><button class="pin-set-btn" onclick="promptSetPin(\'super\')">Change</button></div>';
-  html+='</div>';
-
-  // Add coach form
-  html+='<div class="card"><label class="eyebrow">Add Coach Manually</label>';
-  html+='<input type="text" id="addName" placeholder="Full name" style="margin-bottom:8px;">';
-  html+='<select id="addProgram" style="margin-bottom:8px;"><option value="">Select program...</option>';
-  PROGRAMS.forEach(function(p){ html+='<option>'+p+'</option>'; });
-  html+='</select>';
-  html+='<input type="text" id="addPin" placeholder="Assign a PIN (4+ digits)" maxlength="10" style="margin-bottom:8px;">';
-  html+='<div id="addCoachMsg" style="font-size:13px;margin-bottom:8px;display:none;"></div>';
-  html+='<button class="submit-btn" onclick="addCoach()" style="padding:12px;font-size:13px;">Add Coach</button></div>';
-
-  // Coach table
-  html+='<div class="card"><label class="eyebrow">All Coaches ('+data.coaches.length+')</label>';
-  if(data.coaches.length){
-    html+='<table class="admin-table"><tr><th>Name</th><th>Program</th><th>Sessions</th><th>Actions</th></tr>';
-    data.coaches.forEach(function(c){
-      var pOpts=['Recreation','Challenge','Juniors','Classic','NPL','ECNL-RL','ECNL','Academy'];
-      var pSel='<select onchange="assignProgram(\''+c.name+'\',this.value)" style="background:#0f172a;border:1px solid #334155;border-radius:6px;color:#f1f5f9;font-size:11px;padding:3px 5px;">';
-      pOpts.forEach(function(p){ pSel+='<option value="'+p+'"'+(c.program===p?' selected':'')+'>'+p+'</option>'; });
-      pSel+='</select>';
-      html+='<tr><td style="color:#f1f5f9;font-size:12px;">'+c.name+'</td><td>'+pSel+'</td><td style="font-size:12px;">'+(c.sessions||0)+'</td>';
-      html+='<td><div class="admin-actions">';
-      html+='<button class="action-btn action-reset" onclick="resetPin(\''+c.keyName+'\',\''+c.name+'\')">Reset PIN</button>';
-      html+='<button class="action-btn action-remove" onclick="removeCoach(\''+c.keyName+'\',\''+c.name+'\')">Remove</button>';
-      html+='</div></td></tr>';
-    });
-    html+='</table>';
-  } else { html+='<div class="empty-state" style="padding:20px;">No coaches registered yet.</div>'; }
-  html+='</div>';
-
-  document.getElementById('adminContent').innerHTML=html;
-}
-
-function saveDirEmail(program) {
-  var email = document.getElementById('dirEmail-'+program) ? document.getElementById('dirEmail-'+program).value.trim() : '';
-  if (!email) return;
-  callBackend('setDirectorEmail', [_adminPin, program, email],
-    function(r){ if(r&&r.success) alert('Email saved.'); else alert(r?r.error:'Error.'); },
-    function(){});
-}
-function promptSetPin(program) {
-  var newPin=prompt('Set director PIN for '+(program==='super'?'super-admin':program)+':');
-  if(!newPin||newPin.length<4){ alert('PIN must be at least 4 digits.'); return; }
-  callBackend('setDirectorPin', [_adminPin, program, newPin],
-    function(r){ if(r&&r.success) alert('PIN updated.'); else alert(r?r.error:'Error.'); },
-    function(){});
-}
-function addCoach(){
-  var name=document.getElementById('addName').value.trim();
-  var prog=document.getElementById('addProgram').value;
-  var pin=document.getElementById('addPin').value.trim();
-  var msg=document.getElementById('addCoachMsg');
-  if(!name||!prog||pin.length<4){ msg.style.display='block'; msg.style.color='#fca5a5'; msg.textContent='Please fill all fields with a 4+ digit PIN.'; return; }
-  callBackend('addCoachManually', [_adminPin, name, prog, pin],
-    function(r){
-      msg.style.display='block';
-      if(r&&r.success){ msg.style.color='#86efac'; msg.textContent='Coach added: '+name+' (PIN: '+pin+')'; document.getElementById('addName').value=''; document.getElementById('addPin').value=''; document.getElementById('addProgram').value=''; }
-      else { msg.style.color='#fca5a5'; msg.textContent=r?r.error:'Error adding coach.'; }
-    },
-    function(){});
-}
-function resetPin(keyName, displayName){
-  if(!confirm('Reset PIN for '+displayName+'? A temporary 4-digit PIN will be generated.')) return;
-  callBackend('resetCoachPin', [_adminPin, keyName],
-    function(r){ if(r&&r.success) alert('PIN reset to: '+r.newPin); else alert(r?r.error:'Error.'); },
-    function(){});
-}
-function assignProgram(coachName, program) {
-  if (!program) return;
-  callBackend('updateCoachProgram', [coachName, program],
-    function(r){}, function(e){});
-}
-function removeCoach(keyName, displayName){
-  if(!confirm('Remove '+displayName+'? This deletes their account (not their session data).')) return;
-  callBackend('removeCoachAccount', [_adminPin, keyName],
-    function(r){ if(r&&r.success){ alert(keyName+' removed.'); location.reload(); } else alert(r?r.error:'Error.'); },
-    function(){});
-}
-
-// ── PDF ───────────────────────────────────────────────────
-function showPBToast(label, value, previous) {
-  var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#14532d;border:1px solid #22c55e;color:#86efac;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:320px;text-align:center;transition:all 0.3s;';
-  var prev = previous > 0 ? ' (was ' + parseFloat(previous).toFixed(1) + ')' : '';
-  toast.innerHTML = '🏆 New personal best!<br><span style="font-size:16px;">' + label + ': ' + parseFloat(value).toFixed(1) + '</span>' + prev;
-  document.body.appendChild(toast);
-  setTimeout(function(){ toast.style.opacity='0'; setTimeout(function(){ toast.remove(); }, 400); }, 3500);
-}
-
-
-// ═══════════════════════════════════════════════════════════════
-// SEASON REVIEW PDF
-// ═══════════════════════════════════════════════════════════════
-
-function generateSeasonReview() {
-  var coach = sessionStorage.getItem('coachName') || _lastCoach;
-  if (!coach) { alert('Please log in first.'); return; }
-  var btn = document.getElementById('seasonReviewBtn');
-  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
-
-  callBackend('generateSeasonReview', [coach],
-    function(data) {
-      if (btn) { btn.innerHTML = '📄 Season Review PDF'; btn.disabled = false; }
-      if (!data || data.error) { alert(data ? data.error : 'Error generating season review.'); return; }
-      buildSeasonReviewPDF(data);
-    },
-    function(e) {
-      if (btn) { btn.innerHTML = '📄 Season Review PDF'; btn.disabled = false; }
-      alert('Error: ' + (e.message || String(e)));
-    }
-  );
-}
-
-function buildSeasonReviewPDF(d) {
-  var jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
-  if (!jsPDFLib) { alert('PDF library not loaded — try again.'); return; }
-
-  var doc = new jsPDFLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  var PW = 210, PH = 297, M = 18, CW = PW - M * 2;
-  var y = 0;
-
-  var C = {
-    white:'#FFFFFF', offwhite:'#F8FAFC', border:'#E2E8F0',
-    navy:'#1E3A5F', navyLight:'#EFF6FF', navyMid:'#DBEAFE',
-    ink:'#0F172A', body:'#334155', muted:'#64748B', light:'#94A3B8',
-    green:'#16A34A', greenBg:'#F0FDF4', greenAcc:'#22C55E',
-    amber:'#D97706', amberBg:'#FFFBEB', amberAcc:'#F59E0B',
-    purple:'#7C3AED', purpleAcc:'#8B5CF6',
-    red:'#DC2626',
-    gradeA:'#14532D', gradeAT:'#86EFAC',
-    gradeB:'#1E3A5F', gradeBT:'#93C5FD',
-    gradeC:'#713F12', gradeCT:'#FDE68A',
-    gradeD:'#7F1D1D', gradeDT:'#FCA5A5'
-  };
-
-  function rgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
-  function tc(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
-  function fc(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
-  function sc(h,w){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); if(w) doc.setLineWidth(w); }
-  function chk(n){ if(y+n > PH-16) newPage(); }
-  function sp(n){ y+=n; }
-
-  function pageHeader() {
-    fc(C.navy); doc.rect(0,0,PW,10,'F');
-    doc.setFontSize(7); doc.setFont('helvetica','normal'); tc(C.navyMid);
-    doc.text('Voach  ·  ' + (d.coachName||'') + '  ·  Season Review  ·  ' + (d.season||''), M, 6.5);
-    doc.text((d.season||''), PW-M, 6.5, {align:'right'});
-    y = 18;
-  }
-
-  function newPage() {
-    doc.addPage();
-    fc(C.white); doc.rect(0,0,PW,PH,'F');
-    pageHeader();
-    sc(C.border, 0.3); doc.line(M-4, 16, M-4, PH-16);
-  }
-
-  function divLabel(text) {
-    sp(12); chk(12);
-    sc(C.border, 0.4); doc.line(M, y, PW-M, y); sp(5);
-    tc(C.muted); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
-    doc.text(text.toUpperCase(), M, y);
-    var lw = doc.getTextWidth(text.toUpperCase());
-    sc(C.navy, 1.2); doc.line(M, y+1.5, M+lw, y+1.5);
-    sp(8);
-  }
-
-  function accentCard(label, labelColor, title, body, bgColor) {
-    var titleLines = title ? doc.splitTextToSize(title, CW-12) : [];
-    var bodyLines  = body  ? doc.splitTextToSize(body,  CW-12) : [];
-    var h = 8 + (titleLines.length*5.5) + (bodyLines.length*5.5) + 8;
-    chk(h);
-    fc(bgColor||C.offwhite); doc.roundedRect(M,y,CW,h,2,2,'F');
-    var ac=rgb(labelColor); doc.setFillColor(ac[0],ac[1],ac[2]); doc.rect(M,y,3,h,'F');
-    sc(C.border,0.25); doc.roundedRect(M,y,CW,h,2,2,'S');
-    doc.setFontSize(7); doc.setFont('helvetica','bold'); tc(labelColor);
-    doc.text(label.toUpperCase(), M+8, y+5.5);
-    var ty = y+10;
-    if (titleLines.length) {
-      doc.setFontSize(11); doc.setFont('helvetica','bold'); tc(C.ink);
-      doc.text(titleLines, M+8, ty); ty += titleLines.length*5.5+3;
-    }
-    if (bodyLines.length) {
-      doc.setFontSize(9.5); doc.setFont('helvetica','normal'); tc(C.body);
-      doc.text(bodyLines, M+8, ty);
-    }
-    y += h+6;
-  }
-
-  // ── COVER PAGE ─────────────────────────────────────────────
-  fc(C.white); doc.rect(0,0,PW,PH,'F');
-  fc(C.navy); doc.rect(0,0,PW,70,'F');
-  fc(C.navyMid); doc.rect(0,0,PW,2,'F');
-
-  doc.setFontSize(8); doc.setFont('helvetica','bold'); tc(C.navyMid);
-  doc.text('VOACH  ·  ANNUAL SEASON REVIEW', M, 14);
-
-  doc.setFontSize(28); doc.setFont('helvetica','bold'); tc(C.white);
-  doc.text(d.coachName || 'Coach', M, 34);
-
-  doc.setFontSize(13); doc.setFont('helvetica','normal'); tc(C.light);
-  doc.text((d.season||'') + ' Season  ·  ' + (d.sessionCount||0) + ' Sessions Analysed', M, 46);
-
-  // Headline
-  if (d.narrative && d.narrative.headline) {
-    doc.setFontSize(11); doc.setFont('helvetica','italic'); tc(C.navyMid);
-    var hl = doc.splitTextToSize(d.narrative.headline, CW);
-    doc.text(hl, M, 60);
-  }
-
-  sc(C.border, 0.3); doc.line(M-4, 70, M-4, PH-16);
-  y = 82;
-
-  // Grade summary strip
-  var grades = d.gradeCounts || {};
-  var gradeColors = {A:{bg:C.gradeA,tx:C.gradeAT},B:{bg:C.gradeB,tx:C.gradeBT},C:{bg:C.gradeC,tx:C.gradeCT},D:{bg:C.gradeD,tx:C.gradeDT}};
-  var totalSessions = (grades.A||0)+(grades.B||0)+(grades.C||0)+(grades.D||0);
-  if (totalSessions > 0) {
-    var gx = M;
-    ['A','B','C','D'].forEach(function(g){
-      var cnt = grades[g] || 0;
-      if (!cnt) return;
-      var w = (cnt/totalSessions)*CW;
-      var gc = gradeColors[g];
-      var bgc = rgb(gc.bg); doc.setFillColor(bgc[0],bgc[1],bgc[2]); doc.rect(gx,y,w,10,'F');
-      if (w > 14) {
-        doc.setFontSize(8); doc.setFont('helvetica','bold'); tc(gc.tx);
-        doc.text(g+' ('+cnt+')', gx+4, y+6.5);
-      }
-      gx += w;
-    });
-    doc.setFontSize(8); doc.setFont('helvetica','normal'); tc(C.muted);
-    doc.text('Grade distribution across ' + totalSessions + ' sessions', M, y+15);
-    sp(22);
-  }
-
-  // Season narrative
-  if (d.narrative) {
-    var n = d.narrative;
-    [
-      {label:'Season story', color:C.navy,    text:n.openingPara,   bg:C.navyLight},
-      {label:'What grew',    color:C.greenAcc, text:n.growthPara,    bg:C.greenBg},
-      {label:'Growth edge',  color:C.amberAcc, text:n.challengePara, bg:C.amberBg},
-      {label:'Looking ahead',color:C.purpleAcc,text:n.closingPara,   bg:'#F5F3FF'}
-    ].forEach(function(card){
-      if (card.text) accentCard(card.label, card.color, null, card.text, card.bg);
-    });
-  }
-
-  // ── PAGE 2 — DATA ─────────────────────────────────────────
-  newPage();
-
-  // Season arc
-  divLabel('Your season arc — where you started vs where you finished');
-  var arc = d.arc || {};
-  var arcRows = [
-    {label:'Discovery Questions', s:arc.startDQ, e:arc.endDQ, unit:'/1000w'},
-    {label:'Questioning Balance',  s:arc.startQI, e:arc.endQI, unit:''},
-    {label:'Game Language',         s:arc.startGL, e:arc.endGL, unit:'/1000w'},
-    {label:'Teaching Score',        s:arc.startTS, e:arc.endTS, unit:'%'}
-  ];
-  arcRows.forEach(function(r) {
-    chk(14);
-    var delta = parseFloat((r.e - r.s).toFixed(2));
-    var dText = delta > 0 ? '+'+delta : String(delta);
-    var dColor = delta > 0 ? C.greenAcc : delta < 0 ? C.red : C.muted;
-    fc(C.offwhite); doc.rect(M,y,CW,12,'F');
-    sc(C.border,0.2); doc.rect(M,y,CW,12,'S');
-    doc.setFontSize(9); doc.setFont('helvetica','normal'); tc(C.ink);
-    doc.text(r.label, M+4, y+7.5);
-    doc.setFont('helvetica','normal'); tc(C.muted);
-    var sVal = (r.unit==='%') ? Math.round(r.s)+r.unit : parseFloat(r.s||0).toFixed(r.unit?1:2)+r.unit;
-    var eVal = (r.unit==='%') ? Math.round(r.e)+r.unit : parseFloat(r.e||0).toFixed(r.unit?1:2)+r.unit;
-    doc.text(sVal + '  →  ' + eVal, M+CW*0.45, y+7.5);
-    doc.setFont('helvetica','bold'); tc(dColor);
-    doc.text(dText, PW-M-4, y+7.5, {align:'right'});
-    sp(14);
-  });
-
-  // Season averages
-  divLabel('Season averages');
-  var avg = d.avg || {};
-  var avgRows = [
-    {label:'Discovery Questions', val:avg.dq,  unit:'/1000w'},
-    {label:'Questioning Balance',  val:avg.qi,  unit:''},
-    {label:'Positive Moments',     val:avg.pr,  unit:'/1000w'},
-    {label:'Encouragement Ratio',  val:avg.pc,  unit:''},
-    {label:'Game Language',         val:avg.gl,  unit:'/1000w'},
-    {label:'Teaching Score',        val:avg.ts,  unit:'%'}
-  ];
-  avgRows.forEach(function(r) {
-    chk(12);
-    fc(C.offwhite); doc.rect(M,y,CW,10,'F');
-    sc(C.border,0.2); doc.rect(M,y,CW,10,'S');
-    doc.setFontSize(9); doc.setFont('helvetica','normal'); tc(C.ink);
-    doc.text(r.label, M+4, y+6.5);
-    doc.setFont('helvetica','bold'); tc(C.navy);
-    var val = r.unit==='%' ? Math.round(r.val||0)+r.unit : parseFloat(r.val||0).toFixed(r.unit?1:2)+r.unit;
-    doc.text(val, PW-M-4, y+6.5, {align:'right'});
-    sp(12);
-  });
-
-  // Personal bests
-  divLabel('Personal bests this season');
-  var pbs = d.personalBests || {};
-  var pbItems = [
-    {label:'Discovery Questions', val:pbs.discoveryQ,   unit:'/1000w'},
-    {label:'Questioning Balance',  val:pbs.qiRatio,      unit:''},
-    {label:'Game Language',         val:pbs.gameLanguage, unit:'/1000w'},
-    {label:'Teaching Score',        val:pbs.teachingScore,unit:'%'}
-  ].filter(function(p){ return (p.val||0) > 0; });
-
-  if (pbItems.length > 0) {
-    var pbCols = 2, pbW = (CW-8)/pbCols, pbX = M;
-    pbItems.forEach(function(p, i) {
-      if (i>0 && i%pbCols===0) { sp(24); pbX=M; }
-      chk(22);
-      fc(C.navyLight); doc.rect(pbX,y,pbW,20,'F');
-      sc(C.navyMid,0.3); doc.rect(pbX,y,pbW,20,'S');
-      doc.setFontSize(8); doc.setFont('helvetica','normal'); tc(C.muted);
-      doc.text(p.label, pbX+5, y+7);
-      doc.setFontSize(14); doc.setFont('helvetica','bold'); tc(C.navy);
-      var val = p.unit==='%' ? Math.round(p.val||0)+p.unit : parseFloat(p.val||0).toFixed(1)+p.unit;
-      doc.text(val, pbX+5, y+16);
-      pbX += pbW+8;
-    });
-    sp(26);
-  }
-
-  // Best session
-  if (d.bestSession) {
-    divLabel('Best session of the season');
-    var bs = d.bestSession;
-    var bsH = 36;
-    chk(bsH);
-    var gc = {A:{bg:C.gradeA,tx:C.gradeAT},B:{bg:C.gradeB,tx:C.gradeBT},C:{bg:C.gradeC,tx:C.gradeCT},D:{bg:C.gradeD,tx:C.gradeDT}}[bs.grade]||{bg:C.navy,tx:C.white};
-    fc(gc.bg); doc.roundedRect(M,y,CW,bsH,2,2,'F');
-    var gbc=rgb(gc.tx); doc.setFillColor(gbc[0],gbc[1],gbc[2]); doc.circle(M+14,y+bsH/2,9,'F');
-    doc.setFontSize(16); doc.setFont('helvetica','bold'); tc(C.ink);
-    doc.text(bs.grade||'', M+14, y+bsH/2+2, {align:'center'});
-    doc.setFontSize(11); doc.setFont('helvetica','bold'); tc(C.white);
-    doc.text((bs.date||'') + '  ·  ' + (bs.sessionType||'') + '  ·  ' + (bs.ageGroup||''), M+28, y+10);
-    if (bs.objective) {
-      doc.setFontSize(8.5); doc.setFont('helvetica','normal'); tc(C.light);
-      doc.text(doc.splitTextToSize(bs.objective, CW-32).slice(0,2), M+28, y+18);
-    }
-    if (bs.wentWell) {
-      doc.setFontSize(8); tc(C.light);
-      doc.text(doc.splitTextToSize(bs.wentWell, CW-32).slice(0,1), M+28, y+28);
-    }
-    sp(bsH+8);
-  }
-
-  // Next season focus
-  if (d.narrative && d.narrative.nextSeasonFocus) {
-    divLabel('Focus for next season');
-    chk(20);
-    fc(C.navyLight); doc.rect(M,y,CW,16,'F');
-    sc(C.navy,0.5); doc.rect(M,y,CW,16,'S');
-    doc.setFontSize(11); doc.setFont('helvetica','bold'); tc(C.navy);
-    doc.text(d.narrative.nextSeasonFocus, M+10, y+10);
-    sp(20);
-  }
-
-  // Footer on every page
-  var totalPages = doc.internal.getNumberOfPages();
-  for (var p=1; p<=totalPages; p++) {
-    doc.setPage(p);
-    fc(C.navy); doc.rect(0,PH-10,PW,10,'F');
-    doc.setFontSize(7); doc.setFont('helvetica','normal'); tc(C.navyMid);
-    doc.text('Voach  ·  ' + (d.coachName||'') + '  ·  ' + (d.season||'') + ' Season Review  ·  Confidential', M, PH-4);
-    doc.text('Page '+p+' of '+totalPages, PW-M, PH-4, {align:'right'});
-  }
-
-  var filename = 'Voach_SeasonReview_' + (d.coachName||'Coach').replace(/\s+/g,'_') + '_' + (d.season||'').replace(/[^0-9a-z-]/gi,'_') + '.pdf';
-  doc.save(filename);
-}
-
-
-// ═══════════════════════════════════════════════════════════════
-// MILESTONE SHARE CARD
-// ═══════════════════════════════════════════════════════════════
-
-function showMilestoneCard(type, value, coachName, pbItems) {
-  // Remove any existing overlay
-  var existing = document.getElementById('milestoneOverlay');
-  if (existing) existing.remove();
-
-  var overlay = document.createElement('div');
-  overlay.id = 'milestoneOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
-
-  var canvas = document.createElement('canvas');
-  canvas.width  = 1080;
-  canvas.height = 1080;
-  canvas.style.cssText = 'width:320px;height:320px;border-radius:16px;display:block;';
-
-  var ctx = canvas.getContext('2d');
-
-  // Background gradient
-  var grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-  grad.addColorStop(0,   '#0f172a');
-  grad.addColorStop(0.5, '#1e3a5f');
-  grad.addColorStop(1,   '#0f172a');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 1080, 1080);
-
-  // Subtle grid pattern
-  ctx.strokeStyle = 'rgba(59,130,246,0.06)';
-  ctx.lineWidth = 1;
-  for (var gx = 0; gx < 1080; gx += 60) {
-    ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,1080); ctx.stroke();
-  }
-  for (var gy = 0; gy < 1080; gy += 60) {
-    ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(1080,gy); ctx.stroke();
-  }
-
-  // Top brand bar
-  ctx.fillStyle = 'rgba(30,58,95,0.8)';
-  ctx.fillRect(0, 0, 1080, 100);
-  ctx.fillStyle = '#93c5fd';
-  ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('VOACH', 60, 62);
-  ctx.fillStyle = '#475569';
-  ctx.font = '26px system-ui, -apple-system, sans-serif';
-  ctx.fillText('Hear yourself coach.', 220, 62);
-
-  // Decorative circle
-  ctx.beginPath();
-  ctx.arc(540, 420, 260, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(59,130,246,0.15)';
-  ctx.lineWidth = 40;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(540, 420, 200, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(59,130,246,0.08)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  if (type === 'streak') {
-    // Emoji
-    ctx.font = '160px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText(value >= 20 ? '🔥🔥' : value >= 10 ? '🔥' : '⚡', 540, 380);
-
-    // Number
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 140px system-ui, -apple-system, sans-serif';
-    ctx.fillText(value, 540, 560);
-
-    ctx.fillStyle = '#93c5fd';
-    ctx.font = 'bold 52px system-ui, -apple-system, sans-serif';
-    ctx.fillText('SESSION STREAK', 540, 640);
-
-    ctx.fillStyle = '#64748b';
-    ctx.font = '36px system-ui, -apple-system, sans-serif';
-    ctx.fillText('2025-26 season', 540, 700);
-
-  } else if (type === 'pb') {
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 52px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('PERSONAL BESTS', 540, 220);
-
-    ctx.fillStyle = '#93c5fd';
-    ctx.font = '34px system-ui, -apple-system, sans-serif';
-    ctx.fillText('2025-26 Season', 540, 270);
-
-    // PB grid
-    var items = pbItems || [];
-    var startY = 340;
-    var cols = items.length <= 2 ? 1 : 2;
-    var cellW = cols === 1 ? 600 : 440;
-    var cellH = 160;
-    var totalW = cols * cellW + (cols-1) * 40;
-    var startX = (1080 - totalW) / 2;
-
-    items.slice(0,4).forEach(function(p, i) {
-      var col = i % cols;
-      var row = Math.floor(i / cols);
-      var cx  = startX + col * (cellW + 40);
-      var cy  = startY + row * (cellH + 20);
-
-      // Card bg
-      ctx.fillStyle = 'rgba(30,58,95,0.6)';
-      roundRect(ctx, cx, cy, cellW, cellH, 16);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(59,130,246,0.3)';
-      ctx.lineWidth = 2;
-      roundRect(ctx, cx, cy, cellW, cellH, 16);
-      ctx.stroke();
-
-      ctx.fillStyle = '#64748b';
-      ctx.font = '24px system-ui, -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(p.label.toUpperCase(), cx + cellW/2, cy + 38);
-
-      ctx.fillStyle = '#93c5fd';
-      ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
-      var raw = p.val !== undefined ? p.val : (p.value !== undefined ? p.value : 0);
-      var val = typeof raw === 'number' ? raw.toFixed(p.unit === '%' ? 0 : 1) : String(raw);
-      ctx.fillText(val + (p.unit||''), cx + cellW/2, cy + 110);
-    });
-  }
-
-  // Coach name
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 40px system-ui, -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(coachName, 540, 920);
-
-  // Bottom bar
-  ctx.fillStyle = 'rgba(30,58,95,0.6)';
-  ctx.fillRect(0, 980, 1080, 100);
-  ctx.fillStyle = '#475569';
-  ctx.font = '28px system-ui, -apple-system, sans-serif';
-  ctx.fillText('voach.io  ·  Coaching development, measured.', 540, 1036);
-
-  // Buttons
-  var btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:12px;margin-top:16px;';
-
-  var dlBtn = document.createElement('button');
-  dlBtn.textContent = '⬇ Save Image';
-  dlBtn.style.cssText = 'background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;';
-  dlBtn.onclick = function() {
-    var link = document.createElement('a');
-    link.download = 'Voach_Milestone_' + coachName.replace(/\s+/g,'_') + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  };
-
-  var closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕ Close';
-  closeBtn.style.cssText = 'background:transparent;color:#64748b;border:1px solid #334155;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;';
-  closeBtn.onclick = function() { overlay.remove(); };
-
-  btnRow.appendChild(dlBtn);
-  btnRow.appendChild(closeBtn);
-  overlay.appendChild(canvas);
-  overlay.appendChild(btnRow);
-  document.body.appendChild(overlay);
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.lineTo(x+w-r, y);
-  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-  ctx.lineTo(x+w, y+h-r);
-  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-  ctx.lineTo(x+r, y+h);
-  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-  ctx.lineTo(x, y+r);
-  ctx.quadraticCurveTo(x, y, x+r, y);
-  ctx.closePath();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SEASON SUMMARY CERTIFICATE
-// ═══════════════════════════════════════════════════════════════
-
-function downloadSeasonCertificate() {
-  var coach = sessionStorage.getItem('coachName') || _lastCoach;
-  if (!coach) { alert('Please log in first.'); return; }
-  var btn = document.getElementById('certBtn');
-  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
-
-  callBackend('generateSeasonReview', [coach],
-    function(data) {
-      if (btn) { btn.innerHTML = '🏅 Season Certificate'; btn.disabled = false; }
-      if (!data || data.error) { alert(data ? data.error : 'Error generating certificate.'); return; }
-      buildCertificatePDF(data);
-    },
-    function(e) {
-      if (btn) { btn.innerHTML = '🏅 Season Certificate'; btn.disabled = false; }
-      alert('Error: ' + (e.message || String(e)));
-    }
-  );
-}
-
-function buildCertificatePDF(d) {
-  var jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
-  if (!jsPDFLib) { alert('PDF library not loaded — try again.'); return; }
-
-  var doc = new jsPDFLib({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  var PW = 297, PH = 210, M = 20;
-
-  function rgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
-  function tc(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
-  function fc(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
-  function sc(h,w){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); if(w) doc.setLineWidth(w); }
-
-  // Background
-  fc('#0f172a'); doc.rect(0,0,PW,PH,'F');
-
-  // Border frame
-  sc('#1e3a5f',0.5); doc.rect(8,8,PW-16,PH-16,'S');
-  sc('#3b82f6',0.3); doc.rect(10,10,PW-20,PH-20,'S');
-
-  // Corner decorations
-  var corners = [[12,12],[PW-12,12],[12,PH-12],[PW-12,PH-12]];
-  corners.forEach(function(c) {
-    sc('#3b82f6',1); doc.circle(c[0],c[1],4,'S');
-    sc('#1e3a5f',0.5); doc.circle(c[0],c[1],7,'S');
-  });
-
-  // Top brand
-  doc.setFontSize(9); doc.setFont('helvetica','bold'); tc('#475569');
-  doc.text('VOACH  ·  COACHING DEVELOPMENT PLATFORM', PW/2, 20, {align:'center'});
-  sc('#1e3a5f',0.4); doc.line(M+10, 23, PW-M-10, 23);
-
-  // Certificate title
-  doc.setFontSize(11); doc.setFont('helvetica','normal'); tc('#64748b');
-  doc.text('This certifies that', PW/2, 34, {align:'center'});
-
-  // Coach name — big
-  doc.setFontSize(38); doc.setFont('helvetica','bold'); tc('#f8fafc');
-  doc.text(d.coachName || 'Coach', PW/2, 56, {align:'center'});
-
-  // Underline
-  var nameW = doc.getTextWidth(d.coachName || 'Coach');
-  sc('#3b82f6',0.8); doc.line(PW/2 - nameW/2, 59, PW/2 + nameW/2, 59);
-
-  // Subtitle
-  doc.setFontSize(11); doc.setFont('helvetica','normal'); tc('#64748b');
-  doc.text('has successfully completed', PW/2, 68, {align:'center'});
-
-  // Season + sessions
-  doc.setFontSize(16); doc.setFont('helvetica','bold'); tc('#93c5fd');
-  doc.text((d.season||'') + ' Coaching Season  ·  ' + (d.sessionCount||0) + ' Sessions Analysed', PW/2, 80, {align:'center'});
-
-  // Metrics strip
-  var metrics = [
-    {label:'Discovery Q',    val: d.avg ? d.avg.dq.toFixed(1)  : '—', unit:'/1000w'},
-    {label:'Q:I Balance',    val: d.avg ? d.avg.qi.toFixed(2)  : '—', unit:''},
-    {label:'Game Language',  val: d.avg ? d.avg.gl.toFixed(1)  : '—', unit:'/1000w'},
-    {label:'Teaching Score', val: d.avg ? Math.round(d.avg.ts) : '—', unit:'%'},
-    {label:'Dominant Grade', val: d.dominantGrade || '—',              unit:''},
-  ];
-  var mW   = 40;
-  var mGap = 8;
-  var totalMW = metrics.length * mW + (metrics.length-1) * mGap;
-  var mStartX = (PW - totalMW) / 2;
-  var mY = 92;
-
-  metrics.forEach(function(m, i) {
-    var mx = mStartX + i * (mW + mGap);
-    // Card
-    fc('#1e293b'); doc.roundedRect(mx, mY, mW, 28, 2, 2, 'F');
-    sc('#1e3a5f',0.3); doc.roundedRect(mx, mY, mW, 28, 2, 2, 'S');
-    // Label
-    doc.setFontSize(6.5); doc.setFont('helvetica','normal'); tc('#64748b');
-    doc.text(m.label.toUpperCase(), mx + mW/2, mY+8, {align:'center'});
-    // Value
-    doc.setFontSize(14); doc.setFont('helvetica','bold'); tc('#93c5fd');
-    doc.text(String(m.val) + m.unit, mx + mW/2, mY+20, {align:'center'});
-  });
-
-  // Next season focus
-  if (d.narrative && d.narrative.nextSeasonFocus) {
-    doc.setFontSize(9); doc.setFont('helvetica','italic'); tc('#475569');
-    doc.text('Next season focus: ' + d.narrative.nextSeasonFocus, PW/2, 130, {align:'center'});
-  }
-
-  // Signature line + footer
-  sc('#1e3a5f',0.4); doc.line(M+10, 152, PW-M-10, 152);
-  doc.setFontSize(8); doc.setFont('helvetica','normal'); tc('#334155');
-  doc.text('Issued by Voach  ·  ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}), PW/2, 158, {align:'center'});
-  doc.setFontSize(7); tc('#1e3a5f');
-  doc.text('voach.io  ·  Hear yourself coach.', PW/2, 164, {align:'center'});
-
-  var filename = 'Voach_Certificate_' + (d.coachName||'Coach').replace(/\s+/g,'_') + '_' + (d.season||'').replace(/[^0-9a-z-]/gi,'_') + '.pdf';
-  doc.save(filename);
-}
-
-
-// ── Goals panel ───────────────────────────────────────────────
-function renderGoalsPanel(program) {
-  var el = document.getElementById('dir-panel-goals');
-  if (!el) return;
-
-  // Get coach list from existing data
-  callBackend('getDirectorViewForProgram', [program],
-    function(data) {
-      var coaches = (data && data.coaches) ? data.coaches : [];
-      var html = '';
-
-      // Add goal form
-      html += '<div class="goal-form">';
-      html += '<div style="font-size:14px;font-weight:700;color:#f8fafc;margin-bottom:12px;">Set a development goal</div>';
-      html += '<label>Coach</label>';
-      html += '<select id="goalCoachSel">';
-      html += '<option value="">Select coach...</option>';
-      coaches.forEach(function(c) {
-        html += '<option value="' + c.name + '">' + c.name + '</option>';
-      });
-      html += '</select>';
-      html += '<label>Metric</label>';
-      html += '<select id="goalMetricSel">';
-      html += '<option value="openQ">Discovery Questions (/1000w)</option>';
-      html += '<option value="qi">Questioning Balance (ratio)</option>';
-      html += '<option value="praise">Positive Moments (/1000w)</option>';
-      html += '<option value="pc">Encouragement Ratio</option>';
-      html += '<option value="tactical">Game Language (/1000w)</option>';
-      html += '<option value="teachingScore">Teaching Score (%)</option>';
-      html += '</select>';
-      html += '<label>Target value</label>';
-      html += '<input type="number" id="goalTargetVal" placeholder="e.g. 5.0" step="0.1">';
-      html += '<label>Deadline (optional)</label>';
-      html += '<input type="date" id="goalDeadline">';
-      html += '<button class="submit-btn" style="margin-top:4px;padding:10px;" onclick="submitGoal()">Set Goal →</button>';
-      html += '</div>';
-
-      // Show existing goals
-      html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#64748b;margin-bottom:8px;">ACTIVE GOALS</div>';
-
-      var hasGoals = false;
-      coaches.forEach(function(c) {
-        callBackend('getCoachGoals', [c.name],
-          function(goals) {
-            if (!goals || !goals.length) return;
-            hasGoals = true;
-            var goalEl = document.getElementById('goalsList');
-            if (!goalEl) return;
-            var metricLabels = {openQ:'Discovery Q', qi:'Q:I Balance', praise:'Positive Moments',
-                                pc:'Encouragement', tactical:'Game Language', teachingScore:'Teaching Score'};
-            goals.forEach(function(g) {
-              goalEl.innerHTML += '<div class="goal-row">' +
-                '<div class="goal-coach">' + c.name + '</div>' +
-                '<span class="goal-metric">' + (metricLabels[g.metric]||g.metric) + '</span>' +
-                '<span class="goal-target">Target: ' + g.target + '</span>' +
-                (g.deadline ? '<span class="goal-deadline">By ' + g.deadline + '</span>' : '') +
-                '</div>';
-            });
-          },
-          function(){}
-        );
-      });
-
-      html += '<div id="goalsList" style="background:#0f172a;border-radius:12px;padding:12px;min-height:60px;">';
-      html += '<div style="font-size:12px;color:#334155;">Loading goals...</div>';
-      html += '</div>';
-
-      el.innerHTML = html;
-    },
-    function() { el.innerHTML = '<div class="empty-state">Error loading coaches.</div>'; }
-  );
-}
-
-function submitGoal() {
-  var coach    = document.getElementById('goalCoachSel').value;
-  var metric   = document.getElementById('goalMetricSel').value;
-  var target   = document.getElementById('goalTargetVal').value;
-  var deadline = document.getElementById('goalDeadline').value;
-  var pin      = sessionStorage.getItem('directorPin') || '';
-
-  if (!coach || !metric || !target) { alert('Please fill in coach, metric, and target.'); return; }
-
-  callBackend('setCoachGoal', [pin, coach, metric, parseFloat(target), deadline],
-    function(r) {
-      if (r && r.success) {
-        alert('Goal set for ' + coach + ' ✓');
-        var prog = sessionStorage.getItem('directorProgram') || '';
-        renderGoalsPanel(prog);
-      } else {
-        alert(r ? r.error : 'Error setting goal.');
-      }
-    },
-    function(e) { alert('Error: ' + (e.message||String(e))); }
-  );
-}
-
-// ── Reports panel ─────────────────────────────────────────────
-function renderReportsPanel(program) {
-  var el = document.getElementById('dir-panel-reports');
-  if (!el) return;
-
-  el.innerHTML =
-    '<div class="report-btn-row">' +
-    '<div class="report-card">' +
-    '<div class="report-card-title">📊 Detailed Staff Report</div>' +
-    '<div class="report-card-sub">Full season breakdown — every coach, all metrics, grade distributions, upload frequency, and development goals. Designed for internal staff review.</div>' +
-    '<button class="submit-btn" id="detailReportBtn" onclick="downloadClubReport(\'detailed\')" style="padding:10px;">Generate Detailed Report →</button>' +
-    '</div>' +
-    '<div class="report-card">' +
-    '<div class="report-card-title">🏆 Executive Summary</div>' +
-    '<div class="report-card-sub">One-page program health overview — headline stats, top performers, and key development areas. Board-ready and shareable with club leadership.</div>' +
-    '<button class="submit-btn" id="execReportBtn" onclick="downloadClubReport(\'executive\')" style="padding:10px;">Generate Executive Summary →</button>' +
-    '</div>' +
-    '</div>';
-}
-
-function downloadClubReport(type) {
-  var program = _dirProgram || null;  // use current filter, null = all programs
-  var btnId = type === 'detailed' ? 'detailReportBtn' : 'execReportBtn';
-  var btn   = document.getElementById(btnId);
-  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
-
-  callBackend('getClubReport', [program],
-    function(data) {
-      if (btn) { btn.textContent = type==='detailed' ? 'Generate Detailed Report →' : 'Generate Executive Summary →'; btn.disabled=false; }
-      if (!data || data.error) { alert(data?data.error:'Error generating report.'); return; }
-      if (type === 'detailed') buildDetailedClubPDF(data);
-      else buildExecutiveSummaryPDF(data);
-    },
-    function(e) {
-      if (btn) { btn.textContent = type==='detailed'?'Generate Detailed Report →':'Generate Executive Summary →'; btn.disabled=false; }
-      alert('Error: ' + (e.message||String(e)));
-    }
-  );
-}
-
-// ── Detailed Club PDF ──────────────────────────────────────────
-function buildDetailedClubPDF(d) {
-  var jsPDFLib=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
-  if(!jsPDFLib){alert('PDF library not loaded.');return;}
-  d.program = d.program || 'All Programs';
-  var doc=new jsPDFLib({orientation:'portrait',unit:'mm',format:'a4'});
-  var PW=210,PH=297,M=18,CW=PW-M*2;
-  var y=0;
-
-  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
-  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
-  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
-  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
-  function chk(n){if(y+n>PH-16)newPage();}
-  function sp(n){y+=n;}
-
-  function pageHeader(){
-    fc('#1e3a5f');doc.rect(0,0,PW,10,'F');
-    doc.setFontSize(7);doc.setFont('helvetica','normal');tc('#DBEAFE');
-    doc.text('Voach  ·  ' + (d.program||'') + '  ·  Staff Report  ·  ' + (d.season||''),M,6.5);
-    y=18;
-  }
-  function newPage(){doc.addPage();fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');pageHeader();sc('#E2E8F0',0.3);doc.line(M-4,16,M-4,PH-16);}
-  function divLabel(text){sp(10);chk(10);sc('#E2E8F0',0.4);doc.line(M,y,PW-M,y);sp(5);tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.text(text.toUpperCase(),M,y);sp(8);}
-
-  // Cover
-  fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');
-  fc('#1e3a5f');doc.rect(0,0,PW,60,'F');
-  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  COACHING STAFF REPORT',M,14);
-  tc('#FFFFFF');doc.setFontSize(24);doc.setFont('helvetica','bold');doc.text(d.program||'Program',M,32);
-  tc('#94A3B8');doc.setFontSize(11);doc.setFont('helvetica','normal');doc.text((d.season||'') + ' Season  ·  Generated ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),M,44);
-
-  sc('#E2E8F0',0.3);doc.line(M-4,60,M-4,PH-16);
-  y=72;
-
-  // Summary stats
-  var stats=[
-    {label:'Total Coaches',    val:d.coachCount||0,    unit:''},
-    {label:'Season Sessions',  val:d.seasonSessions||0,unit:''},
-    {label:'Program Health',   val:(d.healthScore||0)+'%',unit:''},
-    {label:'Active This Month',val:d.activeCoaches||0, unit:''}
-  ];
-  var sw=(CW-18)/4;
-  stats.forEach(function(s,i){
-    var sx=M+i*(sw+6);
-    fc('#EFF6FF');doc.rect(sx,y,sw,18,'F');
-    sc('#DBEAFE',0.3);doc.rect(sx,y,sw,18,'S');
-    tc('#64748B');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(s.label.toUpperCase(),sx+sw/2,y+6,{align:'center'});
-    tc('#1E3A5F');doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(String(s.val)+s.unit,sx+sw/2,y+14,{align:'center'});
-  });
-  sp(26);
-
-  // Program averages
-  divLabel('Program averages this season');
-  var avgRows=[
-    {label:'Discovery Questions',val:(d.programAvg&&d.programAvg.openQ)?d.programAvg.openQ.toFixed(1):'-',unit:'/1000w'},
-    {label:'Questioning Balance', val:(d.programAvg&&d.programAvg.qi)?d.programAvg.qi.toFixed(2):'-',unit:''},
-    {label:'Game Language',        val:(d.programAvg&&d.programAvg.tactical)?d.programAvg.tactical.toFixed(1):'-',unit:'/1000w'},
-    {label:'Teaching Score',       val:d.programAvg?Math.round(d.programAvg.ts):'-%',unit:'%'}
-  ];
-  avgRows.forEach(function(r){
-    chk(12);fc('#F8FAFC');doc.rect(M,y,CW,10,'F');sc('#E2E8F0',0.2);doc.rect(M,y,CW,10,'S');
-    tc('#0F172A');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(r.label,M+4,y+6.5);
-    tc('#1E3A5F');doc.setFont('helvetica','bold');doc.text(String(r.val)+r.unit,PW-M-4,y+6.5,{align:'right'});
-    sp(12);
-  });
-
-  // Per-coach table
-  divLabel('Coaching staff — ' + (d.season||'') + ' season');
-  var coaches = d.coaches || [];
-  coaches.forEach(function(c){
-    chk(22);
-    var statusColor = c.uploadStatus==='recent'?'#16A34A':c.uploadStatus==='due'?'#D97706':'#DC2626';
-    var gradeBg = {A:'#14532D',B:'#1E3A5F',C:'#713F12',D:'#7F1D1D'}[c.dominantGrade]||'#1E3A5F';
-    var gradeTx = {A:'#86EFAC',B:'#93C5FD',C:'#FDE68A',D:'#FCA5A5'}[c.dominantGrade]||'#93C5FD';
-    fc('#F8FAFC');doc.rect(M,y,CW,20,'F');
-    sc('#E2E8F0',0.2);doc.rect(M,y,CW,20,'S');
-
-    // Grade badge
-    var gbc=rgb(gradeBg);doc.setFillColor(gbc[0],gbc[1],gbc[2]);doc.rect(M,y,14,20,'F');
-    tc(gradeTx);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text(c.dominantGrade||'?',M+7,y+13,{align:'center'});
-
-    // Name + sessions
-    tc('#0F172A');doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(c.name,M+18,y+8);
-    tc('#64748B');doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(c.seasonSessions+' sessions this season  ·  last upload '+c.daysSince+' days ago',M+18,y+15);
-
-    // Status dot
-    var sdc=rgb(statusColor);doc.setFillColor(sdc[0],sdc[1],sdc[2]);doc.circle(PW-M-4,y+10,2.5,'F');
-
-    // Metrics mini-row
-    var mLabels=['DQ','Q:I','Praise','P:C','GL'];
-    var mVals=[c.avgs.openQ,c.avgs.qi,c.avgs.praise,c.avgs.pc,c.avgs.tactical];
-    var mStartX=M+18, mW2=(CW-22)/5;
-    // shown below main row
-    sp(22);
-    chk(10);
-    fc('#F1F5F9');doc.rect(M+14,y,CW-14,10,'F');
-    mLabels.forEach(function(lbl,i){
-      var mx=mStartX+i*mW2;
-      tc('#94A3B8');doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.text(lbl,mx,y+4.5);
-      tc('#1E3A5F');doc.setFontSize(8);doc.setFont('helvetica','bold');
-      var v=mVals[i];doc.text(v>0?v.toFixed(1):'—',mx,y+9);
-    });
-    sp(12);
-
-    // Goals if any
-    if (c.goals && c.goals.length) {
-      var metricLabels2={openQ:'Discovery Q',qi:'Q:I',praise:'Praise',pc:'P:C',tactical:'Game Lang',teachingScore:'Teaching'};
-      c.goals.forEach(function(g){
-        chk(8);
-        tc('#3B82F6');doc.setFontSize(7.5);doc.setFont('helvetica','bold');
-        doc.text('→ Goal: '+(metricLabels2[g.metric]||g.metric)+' ≥ '+g.target+(g.deadline?' by '+g.deadline:''),M+18,y+5);
-        sp(8);
-      });
-    }
-    sp(4);
-  });
-
-  // Footer
-  var totalPg=doc.internal.getNumberOfPages();
-  for(var p=1;p<=totalPg;p++){
-    doc.setPage(p);
-    fc('#1E3A5F');doc.rect(0,PH-10,PW,10,'F');
-    tc('#DBEAFE');doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text('Voach  ·  '+d.program+'  ·  Staff Report  ·  Confidential',M,PH-4);
-    doc.text('Page '+p+' of '+totalPg,PW-M,PH-4,{align:'right'});
-  }
-
-  doc.save('Voach_StaffReport_'+(d.program||'Program').replace(/\s+/g,'_')+'_'+(d.season||'')+'.pdf');
-}
-
-// ── Executive Summary PDF ─────────────────────────────────────
-function buildExecutiveSummaryPDF(d) {
-  var jsPDFLib=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
-  if(!jsPDFLib){alert('PDF library not loaded.');return;}
-  d.program = d.program || 'All Programs';
-  var doc=new jsPDFLib({orientation:'landscape',unit:'mm',format:'a4'});
-  var PW=297,PH=210,M=20,CW=PW-M*2;
-
-  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
-  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
-  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
-  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
-
-  // Background + header
-  fc('#0F172A');doc.rect(0,0,PW,PH,'F');
-  fc('#1E3A5F');doc.rect(0,0,PW,55,'F');
-  fc('#DBEAFE');doc.rect(0,0,PW,2,'F');
-  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  PROGRAM EXECUTIVE SUMMARY',M,13);
-  tc('#FFFFFF');doc.setFontSize(22);doc.setFont('helvetica','bold');doc.text(d.program||'Program',M,30);
-  tc('#94A3B8');doc.setFontSize(10);doc.setFont('helvetica','normal');
-  doc.text((d.season||'')+' Season  ·  '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),M,42);
-
-  // Health score — large right side
-  var hs=d.healthScore||0;
-  var hsColor=hs>=75?'#22C55E':hs>=50?'#F59E0B':'#EF4444';
-  var hsc=rgb(hsColor);doc.setFillColor(hsc[0],hsc[1],hsc[2]);
-  doc.circle(PW-M-20,27,18,'F');
-  tc('#FFFFFF');doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text(hs+'%',PW-M-20,30,{align:'center'});
-  tc('#DBEAFE');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text('PROGRAM',PW-M-20,37,{align:'center'});
-  doc.text('HEALTH',PW-M-20,42,{align:'center'});
-
-  var y=68;
-
-  // 4 stat cards
-  var stats=[
-    {label:'Coaches',       val:d.coachCount||0,     sub:'enrolled'},
-    {label:'Sessions',      val:d.seasonSessions||0, sub:'this season'},
-    {label:'Active Coaches',val:d.activeCoaches||0,  sub:'uploaded this month'},
-    {label:'Avg Teaching',  val:(d.programAvg?Math.round(d.programAvg.ts):0)+'%',sub:'score'}
-  ];
-  var sw2=(CW-18)/4;
-  stats.forEach(function(s,i){
-    var sx=M+i*(sw2+6);
-    fc('#1E293B');doc.rect(sx,y,sw2,24,'F');
-    sc('#1E3A5F',0.3);doc.rect(sx,y,sw2,24,'S');
-    tc('#64748B');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(s.label.toUpperCase(),sx+sw2/2,y+7,{align:'center'});
-    tc('#F8FAFC');doc.setFontSize(16);doc.setFont('helvetica','bold');doc.text(String(s.val),sx+sw2/2,y+17,{align:'center'});
-    tc('#475569');doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.text(s.sub,sx+sw2/2,y+22,{align:'center'});
-  });
-  y+=32;
-
-  // Top performers + needs attention side by side
-  var colW=(CW-12)/2;
-
-  // Top performers
-  fc('#0F2A1A');doc.rect(M,y,colW,80,'F');
-  sc('#22C55E',0.4);doc.rect(M,y,colW,80,'S');
-  tc('#22C55E');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('TOP PERFORMERS',M+8,y+9);
-  var top=d.topCoaches||[];
-  top.slice(0,3).forEach(function(c,i){
-    tc('#F8FAFC');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text((i+1)+'. '+c.name,M+8,y+20+i*18);
-    tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-    doc.text('Grade '+c.dominantGrade+'  ·  '+c.seasonSessions+' sessions  ·  DQ: '+(c.avgs.openQ||0).toFixed(1),M+8,y+27+i*18);
-  });
-  if (!top.length){tc('#334155');doc.setFontSize(9);doc.text('No data yet',M+8,y+35);}
-
-  // Needs attention
-  var nx=M+colW+12;
-  fc('#2A0F0F');doc.rect(nx,y,colW,80,'F');
-  sc('#EF4444',0.4);doc.rect(nx,y,colW,80,'S');
-  tc('#EF4444');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('NEEDS ATTENTION',nx+8,y+9);
-  var needs=d.needsAttention||[];
-  if(needs.length){
-    needs.slice(0,3).forEach(function(c,i){
-      tc('#F8FAFC');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(c.name,nx+8,y+20+i*18);
-      tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-      var reason=c.daysSince>14?'No upload in '+c.daysSince+' days':'Grade '+c.dominantGrade+' — '+c.seasonSessions+' sessions';
-      doc.text(reason,nx+8,y+27+i*18);
-    });
-  } else {
-    tc('#334155');doc.setFontSize(9);doc.text('All coaches on track ✓',nx+8,y+35);
-  }
-  y+=88;
-
-  // Footer
-  fc('#0F172A');doc.rect(0,PH-12,PW,12,'F');
-  sc('#1E3A5F',0.3);doc.line(0,PH-12,PW,PH-12);
-  tc('#475569');doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('Voach  ·  voach.io  ·  Hear yourself coach.  ·  Confidential — prepared for club leadership',PW/2,PH-5,{align:'center'});
-
-  doc.save('Voach_ExecutiveSummary_'+(d.program||'Program').replace(/\s+/g,'_')+'_'+(d.season||'')+'.pdf');
-}
-
-function triggerPDFFromCache(idx) {
-  var entry = _sessionReportCache[idx];
-  if (!entry || !entry.report) { alert('Report data not found — try refreshing My Sessions.'); return; }
-  triggerPDF(entry.report, entry.coach, entry.ageGroup, entry.date);
-}
-
-function triggerPDF(report, coachName, ageGroup, date) {
-  if(!report){ alert('No report.'); return; }
-  var btn=document.getElementById('dlBtn');
-  if(btn){ btn.textContent='Generating PDF…'; btn.disabled=true; }
-  setTimeout(function(){
-    try{ downloadPDF(report,coachName,ageGroup,date); }
-    catch(e){ alert('PDF error: '+e.message); }
-    if(btn){ btn.innerHTML='⬇&nbsp; Download PDF Report'; btn.disabled=false; }
-  },50);
-}
-
-function downloadPDF(report,coachName,ageGroup,date){
-  var jsPDFLib=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
-  if(!jsPDFLib){ alert('PDF library loading — try again.'); return; }
-
-  var doc=new jsPDFLib({orientation:'portrait',unit:'mm',format:'a4'});
-  // ── Page geometry ──────────────────────────────────────────
-  var PW=210, PH=297, M=18, CW=PW-M*2;
-  var y=0;
-
-  // ── Colour palette (light, professional) ──────────────────
-  var C={
-    white:'#FFFFFF', offwhite:'#F8FAFC', border:'#E2E8F0',
-    navy:'#1E3A5F',  navyLight:'#EFF6FF', navyMid:'#DBEAFE',
-    ink:'#0F172A',   body:'#334155',      muted:'#64748B',   light:'#94A3B8',
-    green:'#16A34A', greenBg:'#F0FDF4',   greenAccent:'#22C55E',
-    amber:'#D97706', amberBg:'#FFFBEB',   amberAccent:'#F59E0B',
-    purple:'#7C3AED',purpleBg:'#F5F3FF',  purpleAccent:'#8B5CF6',
-    red:'#DC2626',   redBg:'#FEF2F2',
-    gradeA:'#14532D',gradeAT:'#86EFAC',
-    gradeB:'#1E3A5F',gradeBT:'#93C5FD',
-    gradeC:'#713F12',gradeCT:'#FDE68A',
-    gradeD:'#7F1D1D',gradeDT:'#FCA5A5'
-  };
-
-  function rgb(h){ h=h.replace('#',''); return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
-  function tc(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
-  function fc(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
-  function sc(h,w){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); if(w) doc.setLineWidth(w); }
-  function chk(n){ if(y+n>PH-16){ newPage(); } }
-  function sp(n){ y+=n; }
-
-  // ── Running header (continuation pages) ───────────────────
-  function pageHeader(){
-    fc(C.navy); doc.rect(0,0,PW,10,'F');
-    doc.setFontSize(7); doc.setFont('helvetica','normal'); tc(C.navyMid);
-    doc.text('NCFC Coach Analytics  ·  '+(coachName||'')+'  ·  '+(ageGroup||'')+'  ·  '+(date||''), M, 6.5);
-    doc.text((report.sessionType||'Training').toUpperCase(), PW-M, 6.5, {align:'right'});
-    y=18;
-  }
-
-  function newPage(){
-    doc.addPage();
-    fc(C.white); doc.rect(0,0,PW,PH,'F');
-    pageHeader();
-    // subtle left margin rule on continuation pages
-    sc(C.border, 0.3); doc.line(M-4, 16, M-4, PH-16);
-  }
-
-  // ── Section divider label ──────────────────────────────────
-  function divLabel(text, topGap){
-    sp(topGap||12);
-    chk(12);
-    // Full-width light rule above label
-    sc(C.border, 0.4); doc.line(M, y, PW-M, y);
-    sp(5);
-    tc(C.muted); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
-    doc.text(text.toUpperCase(), M, y);
-    // Short coloured underline under label text only
-    var lw = doc.getTextWidth(text.toUpperCase());
-    sc(C.navy, 1.2); doc.line(M, y+1.5, M+lw, y+1.5);
-    sp(8);
-  }
-
-  // ── Accent card (white bg, left colour bar) ───────────────
-  function accentCard(label, labelColor, titleText, bodyText, quoteText, bgColor){
-    var titleLines = titleText ? doc.splitTextToSize(titleText, CW-12) : [];
-    var bodyLines  = bodyText  ? doc.splitTextToSize(bodyText,  CW-12) : [];
-    var quoteLines = quoteText ? doc.splitTextToSize('"'+quoteText+'"', CW-12) : [];
-    var h = 8
-      + (titleLines.length * 5.5)
-      + (titleLines.length && bodyLines.length ? 3 : 0)
-      + (bodyLines.length  * 5.5)
-      + (quoteLines.length ? quoteLines.length*5+5 : 0)
-      + 6;
-    chk(h);
-    // Background
-    fc(bgColor||C.offwhite); doc.roundedRect(M, y, CW, h, 2, 2, 'F');
-    // Left accent bar
-    var ac=rgb(labelColor); doc.setFillColor(ac[0],ac[1],ac[2]); doc.rect(M, y, 3, h, 'F');
-    // Label
-    doc.setFontSize(7); doc.setFont('helvetica','bold'); tc(labelColor);
-    doc.text(label.toUpperCase(), M+8, y+5.5);
-    // Border
-    sc(C.border, 0.25); doc.roundedRect(M, y, CW, h, 2, 2, 'S');
-    var ty = y+10;
-    // Title
-    if(titleLines.length){
-      doc.setFontSize(10.5); doc.setFont('helvetica','bold'); tc(C.ink);
-      doc.text(titleLines, M+8, ty); ty += titleLines.length*5.5+3;
-    }
-    // Body
-    if(bodyLines.length){
-      doc.setFontSize(9.5); doc.setFont('helvetica','normal'); tc(C.body);
-      doc.text(bodyLines, M+8, ty); ty += bodyLines.length*5.5+2;
-    }
-    // Quote
-    if(quoteLines.length){
-      ty+=3;
-      doc.setFontSize(8.5); doc.setFont('helvetica','italic'); tc(C.navy);
-      doc.text(quoteLines, M+8, ty);
-    }
-    y += h+6;
-  }
-
-  // ── Metric row ────────────────────────────────────────────
-  function metricRow(label, val, bm, elVal, maxVal, unit, trend){
-    chk(16);
-    var pct=Math.min(0.96, val/(maxVal||10));
-    var bmPct=Math.min(0.96, bm/(maxVal||10));
-    var isOn=val>=bm, isDev=val>=bm*0.6;
-    var barC=isOn?C.greenAccent:isDev?C.amberAccent:C.red;
-    var statusText=isOn?'On target':isDev?'Developing':'Needs focus';
-    var trendArrow=trend==='up'?'↑':trend==='down'?'↓':'→';
-    var trendC=trend==='up'?C.greenAccent:trend==='down'?C.red:C.muted;
-
-    // Row background — tighter height
-    fc(C.offwhite); doc.rect(M, y, CW, 14, 'F');
-    sc(C.border, 0.2); doc.rect(M, y, CW, 14, 'S');
-
-    // Label
-    doc.setFontSize(9); doc.setFont('helvetica','normal'); tc(C.ink);
-    doc.text(label, M+4, y+5.5);
-
-    // Trend arrow
-    doc.setFontSize(9); doc.setFont('helvetica','bold'); tc(trendC);
-    doc.text(trendArrow, M+CW*0.52, y+5.5);
-
-    // Value
-    doc.setFontSize(10); doc.setFont('helvetica','bold'); tc(barC);
-    doc.text(val.toFixed(1)+unit, PW-M-4, y+5.5, {align:'right'});
-
-    // Bar track
-    var bX=M+4, bY=y+8.5, bW=CW-8, bH=2.5;
-    fc(C.border); doc.rect(bX, bY, bW, bH, 'F');
-    // Filled bar
-    var bc=rgb(barC); doc.setFillColor(bc[0],bc[1],bc[2]); doc.rect(bX, bY, bW*pct, bH, 'F');
-    // Benchmark tick
-    sc(C.body, 0.5); doc.line(bX+bW*bmPct, bY-1.5, bX+bW*bmPct, bY+bH+1.5);
-    // Elite tick
-    if(elVal){ var eP=Math.min(0.96,elVal/(maxVal||10)); sc(C.purpleAccent,0.5); doc.line(bX+bW*eP, bY-2, bX+bW*eP, bY+bH+2); }
-    // Status label
-    doc.setFontSize(6.5); doc.setFont('helvetica','normal'); tc(barC);
-    doc.text(statusText+' · target '+bm.toFixed(1), bX, y+13.5);
-    y+=16;
-  }
-
-  // ── Traffic light row (3T / match) ───────────────────────
-  function trafficRow(label, status, evidence){
-    var dotC=status==='green'?C.greenAccent:status==='amber'?C.amberAccent:C.red;
-    var evLines=evidence?doc.splitTextToSize(evidence, CW-14):[];
-    var h=evLines.length?13+evLines.length*5:10;
-    chk(h);
-    // dot
-    var dc=rgb(dotC); doc.setFillColor(dc[0],dc[1],dc[2]); doc.circle(M+4, y+4, 3, 'F');
-    // label
-    doc.setFontSize(9); doc.setFont('helvetica','bold'); tc(C.ink);
-    doc.text(label, M+11, y+5.5);
-    // evidence
-    if(evLines.length){ doc.setFontSize(9); doc.setFont('helvetica','normal'); tc(C.muted); doc.text(evLines, M+11, y+11); }
-    y+=h+3;
-  }
-
-  // ────────────────────────────────────────────────────────────
-  // PAGE 1 — COVER HEADER
-  // ────────────────────────────────────────────────────────────
-  fc(C.white); doc.rect(0,0,PW,PH,'F');
-
-  // Full-width navy header band
-  fc(C.navy); doc.rect(0,0,PW,52,'F');
-
-  // Thin accent stripe at very top
-  fc(C.navyMid); doc.rect(0,0,PW,2,'F');
-
-  // Club label
-  doc.setFontSize(7.5); doc.setFont('helvetica','bold'); tc(C.navyMid);
-  doc.text('NCFC YOUTH  ·  COACH ANALYTICS', M, 13);
-
-  // Report title
-  doc.setFontSize(26); doc.setFont('helvetica','bold'); tc(C.white);
-  doc.text('Session Report', M, 30);
-
-  // Meta line — include program if available
-  var _prog = (report.program || _coachProgram || '');
-  doc.setFontSize(9); doc.setFont('helvetica','normal'); tc(C.light);
-  doc.text([coachName, _prog, ageGroup, (report.sessionType||'Training'), date].filter(Boolean).join('   ·   '), M, 42);
-
-  // Subtle left rule on page body
-  sc(C.border, 0.3); doc.line(M-4, 52, M-4, PH-16);
-
-  y=62;
-
-  // ── Grade / profile card ──────────────────────────────────
-  var grade=(report.grade||'B').charAt(0);
-  var profLabel=report.profileLabel||'Developing Player-Centred Coach';
-  var profDesc=report.profileDesc||'';
-  var gBg={A:C.gradeA,B:C.gradeB,C:C.gradeC,D:C.gradeD};
-  var gTx={A:C.gradeAT,B:C.gradeBT,C:C.gradeCT,D:C.gradeDT};
-  var descLines=profDesc?doc.splitTextToSize(profDesc,CW-36):[];
-  var cardH=descLines.length?32+descLines.length*4.5:28;
-
-  fc(gBg[grade]||C.navy); doc.roundedRect(M,y,CW,cardH,3,3,'F');
-  // Grade circle
-  var gt=rgb(gTx[grade]||C.white); doc.setFillColor(gt[0],gt[1],gt[2]); doc.circle(M+14,y+cardH/2,9,'F');
-  doc.setFontSize(16); doc.setFont('helvetica','bold'); tc('#0F172A'); doc.text(grade,M+14,y+cardH/2+2,{align:'center'});
-  // Profile label
-  doc.setFontSize(12); doc.setFont('helvetica','bold'); tc(C.white); doc.text(profLabel,M+28,y+12);
-  // Session type badge
-  var stBadge=(report.sessionType||'Training').toUpperCase();
-  doc.setFontSize(7); doc.setFont('helvetica','bold');
-  var badgeC=rgb(gTx[grade]||C.white); doc.setFillColor(badgeC[0],badgeC[1],badgeC[2]);
-  var bw=doc.getTextWidth(stBadge)+6; doc.rect(M+28,y+16,bw,6,'F');
-  tc('#0F172A'); doc.text(stBadge,M+31,y+20.5);
-  // Profile desc
-  if(descLines.length){ doc.setFontSize(8.5); doc.setFont('helvetica','normal'); tc(C.light); doc.text(descLines,M+28,y+27); }
-  y+=cardH+10;
-
-  // ── Reliability warning ───────────────────────────────────
-  if(report.reliabilityWarning){
-    chk(14);
-    fc(C.amberBg); doc.rect(M,y,CW,12,'F');
-    sc(C.amberAccent,0.3); doc.rect(M,y,CW,12,'S');
-    doc.setFontSize(8); doc.setFont('helvetica','bold'); tc(C.amber);
-    doc.text('Note: '+report.reliabilityWarning.substring(0,110), M+4, y+7.5);
-    sp(16);
-  }
 
   // ── Question quality ──────────────────────────────────────
   if(report.questionQuality){
@@ -4507,11 +2070,414 @@ function downloadPDF(report,coachName,ageGroup,date){
     doc.setPage(p);
     fc(C.navy); doc.rect(0,PH-10,PW,10,'F');
     doc.setFontSize(7); doc.setFont('helvetica','normal'); tc(C.navyMid);
-    doc.text('NCFC Youth  ·  Coach Analytics  ·  Confidential — Coach Development Use Only', M, PH-4);
+    doc.text('Voach  ·  Coaching Development  ·  Confidential — Coach Use Only', M, PH-4);
     doc.text('Page '+p+' of '+totalPages, PW-M, PH-4, {align:'right'});
   }
 
   doc.save('CoachReport_'+(coachName||'Coach').replace(/\s+/g,'_')+'_'+(date||'').replace(/[\s,]/g,'_')+'.pdf');
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// MY SESSIONS — DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+var _sessionReportCache = {};
+
+function formatSheetDate(val) {
+  if (!val) return '—';
+  try {
+    var d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  } catch(e) { return String(val); }
+}
+
+function loadDashboard() {
+  var coach = _lastCoach || sessionStorage.getItem('coachName');
+  if (!coach) {
+    document.getElementById('dashboardContent').innerHTML = '<div class="empty-state">Please log in first.</div>';
+    return;
+  }
+  document.getElementById('dashboard-sub').textContent = 'Season overview — ' + coach;
+  document.getElementById('dashboardContent').innerHTML = '<div class="loading-inline">Loading your sessions...</div>';
+  callBackend('getCoachHistory', [coach],
+    function(data) {
+      if (!data) { document.getElementById('dashboardContent').innerHTML = '<div class="empty-state">No session data found.</div>'; return; }
+      document.getElementById('dashboardContent').innerHTML = renderDashboard(data, coach);
+    },
+    function() { document.getElementById('dashboardContent').innerHTML = '<div class="empty-state">Error loading sessions. Please try again.</div>'; }
+  );
+}
+
+function renderDashboard(data, coach) {
+  var html = '';
+  html += '<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">';
+  html += '<button class="download-btn" id="seasonReviewBtn" onclick="generateSeasonReview()" style="font-size:13px;padding:10px 18px;">&#128196; Season Review PDF</button>';
+  html += '<button class="download-btn" id="certBtn" onclick="downloadSeasonCertificate()" style="font-size:13px;padding:10px 18px;margin-left:8px;">&#127885; Season Certificate</button>';
+  html += '</div>';
+  if (data.sessions && data.sessions.length >= 2) {
+    html += buildConnectionInsight(data.sessions, coach);
+  }
+  if (data.seasonAvg) {
+    var sa = data.seasonAvg, bt = data.behaviorTotals || {};
+    html += '<div class="season-card">';
+    html += '<div class="eyebrow">SEASON SUMMARY — ' + (data.sessions ? data.sessions.length : 0) + ' SESSIONS</div>';
+    html += '<div class="stat-grid">';
+    html += '<div class="stat-box"><div class="stat-num">' + (data.sessions ? data.sessions.length : 0) + '</div><div class="stat-lbl">Sessions</div></div>';
+    html += '<div class="stat-box"><div class="stat-num">' + (sa.openQ||0).toFixed(1) + '</div><div class="stat-lbl">Avg Discovery Q</div></div>';
+    html += '<div class="stat-box"><div class="stat-num">' + (sa.qi||0).toFixed(2) + '</div><div class="stat-lbl">Avg Q:I</div></div>';
+    html += '<div class="stat-box"><div class="stat-num">' + (sa.praise||0).toFixed(1) + '</div><div class="stat-lbl">Avg Praise</div></div>';
+    html += '</div>';
+    var ms = [{label:'Discovery Questions',key:'openQ',val:sa.openQ||0,bm:3.0,unit:'/1000w'},{label:'Questioning Balance',key:'qi',val:sa.qi||0,bm:0.5,unit:' ratio'},{label:'Positive Moments',key:'praise',val:sa.praise||0,bm:5.0,unit:'/1000w'},{label:'Encouragement Ratio',key:'pc',val:sa.pc||0,bm:3.0,unit:' ratio'},{label:'Game Language',key:'tactical',val:sa.tactical||0,bm:7.0,unit:'/1000w'}];
+    ms.forEach(function(m) {
+      var pct=Math.min((m.val/Math.max(m.bm*2,0.1))*100,100), bmPct=Math.min((m.bm/Math.max(m.bm*2,0.1))*100,100);
+      var cls=m.val>=m.bm?'bar-green':m.val>=m.bm*0.6?'bar-amber':'bar-red';
+      var stCls=m.val>=m.bm?'status-green':m.val>=m.bm*0.6?'status-amber':'status-red';
+      var stTxt=m.val>=m.bm?'On target':m.val>=m.bm*0.6?'Developing':'Below target';
+      html += '<div class="metric-block"><div class="metric-top"><div class="metric-name">'+m.label+'</div><div class="metric-val">'+m.val.toFixed(m.key==='qi'||m.key==='pc'?2:1)+m.unit+'</div></div>';
+      html += '<div class="metric-bar-wrap"><div class="metric-bar '+cls+'" style="width:'+pct.toFixed(1)+'%"></div><div class="bm-tick" style="left:'+bmPct.toFixed(1)+'%"></div></div>';
+      html += '<div class="metric-target '+stCls+'">'+stTxt+' &middot; Target: '+m.bm+m.unit+'</div></div>';
+    });
+    html += '</div>';
+  }
+  if (data.sessions && data.sessions.length > 0) {
+    html += '<div class="eyebrow" style="margin-top:20px;">SESSION HISTORY</div><div id="sessionList">';
+    data.sessions.forEach(function(s, i) {
+      _sessionReportCache[i] = s.report;
+      var report = s.report || {}, metrics = report.metrics || {}, bms = report.benchmarks || {};
+      var pills = [{label:'Questioning',key:'qi',val:metrics.qi||0,bm:bms.qi||0.5},{label:'Encouragement',key:'pc',val:metrics.pc||0,bm:bms.pc||3.0},{label:'Game Language',key:'tactical',val:metrics.tactical||0,bm:bms.tactical||7.0}].map(function(p){var cls=p.val>=p.bm?'pill-green':p.val>=p.bm*0.6?'pill-amber':'pill-red';return '<span class="session-pill '+cls+'">'+p.label+'</span>';}).join('');
+      html += '<div class="session-card" id="scard-'+i+'">';
+      html += '<div class="session-card-header" onclick="toggleSessionCard(\'scard-'+i+'\')">';
+      html += '<div class="session-avatar">'+(s.coachInitial||coach.charAt(0))+'</div>';
+      html += '<div class="session-info"><div class="session-date">'+formatSheetDate(s.date)+' &middot; '+(s.ageGroup||'')+'</div>';
+      html += '<div class="session-title">'+(report.profileLabel||'Training Session')+'</div>';
+      if(s.objective) html += '<div style="font-size:12px;color:#475569;margin-top:2px;">'+s.objective+'</div>';
+      html += '<div style="margin-top:6px;">'+pills+'</div></div>';
+      html += '<div class="session-chevron">&#9650;</div></div>';
+      html += '<div class="session-detail">';
+      if (report && report.metrics) {
+        html += '<div class="report-view-toggle"><button class="report-view-btn" id="btn_full_r'+i+'" onclick="switchReportView(\'full\',\'r'+i+'\',event)">Full Report</button><button class="report-view-btn active" id="btn_card_r'+i+'" onclick="switchReportView(\'card\',\'r'+i+'\',event)">Coach Card</button></div>';
+        html += '<div id="view_full_r'+i+'" style="display:none;">'+buildReportHTML(report, s.ageGroup, 'cv'+i)+'</div>';
+        html += '<div id="view_card_r'+i+'">'+buildCoachCard(report, s.ageGroup, 'r'+i)+'</div>';
+        html += '<button class="download-btn" style="margin-top:8px;width:100%;" onclick="triggerPDFFromCache('+i+')">&#11015; Download Report</button>';
+      } else {
+        html += '<div style="font-size:13px;color:#475569;padding:12px 0;">Report data not available.</div>';
+      }
+      html += '</div></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="empty-state" style="margin-top:20px;">No sessions yet. Upload your first session to begin.</div>';
+  }
+  return html;
+}
+
+function toggleSessionCard(id) {
+  var c = document.getElementById(id);
+  if (c) c.classList.toggle('expanded');
+}
+
+function triggerPDFFromCache(idx) {
+  var report = _sessionReportCache[idx];
+  if (!report) { alert('Report data not available.'); return; }
+  var coach = _lastCoach || sessionStorage.getItem('coachName') || 'Coach';
+  downloadPDF(report, coach, report.ageGroup || '', new Date().toLocaleDateString());
+}
+
+function buildCoachCard(report, ag, rId) {
+  var html = '', metrics = report.metrics || {}, bms = report.benchmarks || {};
+  var mCards = [{key:'openQ',label:'Discovery Questions',unit:'/1000w',desc:'How often you guide players to think'},{key:'qi',label:'Questioning Balance',unit:'',desc:'How often you ask vs. tell'},{key:'praise',label:'Positive Moments',unit:'/1000w',desc:'How often you reinforce what works'},{key:'pc',label:'Encouragement Ratio',unit:' ratio',desc:'Your session climate score'},{key:'tactical',label:'Game Language',unit:'/1000w',desc:'How much you coach in soccer terms'}];
+  html += '<div class="coach-card-grid">';
+  mCards.forEach(function(m) {
+    var val=parseFloat(metrics[m.key])||0, bm=parseFloat(bms[m.key])||1;
+    var isOn=val>=bm, isDev=val>=bm*0.6;
+    var cls=isOn?'green-card':isDev?'amber-card':'red-card';
+    var status=isOn?'On target':isDev?'Developing':'Needs focus';
+    var iId='ci_'+m.key+'_'+rId;
+    html += '<div class="coach-card-metric '+cls+'"><div class="coach-card-label">'+m.desc+'</div>';
+    html += '<div class="coach-card-val">'+val.toFixed(m.key==='qi'||m.key==='pc'?2:1)+m.unit+'</div>';
+    html += '<span class="coach-card-status">'+status+'</span>';
+    html += '<button class="metric-info-btn" data-infoid="'+iId+'">&#9432; what does this mean?</button>';
+    var inf = window.METRIC_INFO && METRIC_INFO[m.key];
+    if (inf) {
+      var sh=(inf.scale||[]).map(function(s){var bg=s.cls==='green'?'#0a2017':s.cls==='amber'?'#1f1500':'#200a0a';var col=s.cls==='green'?'#22c55e':s.cls==='amber'?'#f59e0b':'#ef4444';return '<div class="metric-info-scale-item" style="background:'+bg+';color:'+col+';">'+s.label+'<br>'+s.range+(inf.unit||'')+'</div>';}).join('');
+      html += '<div class="metric-info-panel" id="'+iId+'"><div class="metric-info-why">'+inf.why+'</div><div class="metric-info-scale">'+sh+'</div><div class="metric-info-try"><b>Try this</b>'+inf.try+'</div></div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  if (report.focusArea && report.focusArea.title) {
+    html += '<div class="coach-card-cue"><b>Your focus: '+report.focusArea.title+'</b>';
+    if (report.focusArea.why) html += report.focusArea.why;
+    if (report.focusArea.quote) html += '<div style="color:#3b82f6;margin-top:6px;font-style:italic;">Try: &ldquo;'+report.focusArea.quote+'&rdquo;</div>';
+    html += '</div>';
+  }
+  html += '<div style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:8px;">';
+  if (report.profileLabel) html += '<div style="font-size:13px;font-weight:600;color:#f8fafc;margin-bottom:4px;">'+report.profileLabel+'</div>';
+  if (report.wentWell) html += '<div style="font-size:12px;color:#64748b;line-height:1.5;">'+report.wentWell.substring(0,120)+'...</div>';
+  html += '</div>';
+  return html;
+}
+
+function switchReportView(view, rId, evt) {
+  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+  var full=document.getElementById('view_full_'+rId), card=document.getElementById('view_card_'+rId);
+  var btnF=document.getElementById('btn_full_'+rId), btnC=document.getElementById('btn_card_'+rId);
+  if(full) full.style.display=view==='full'?'block':'none';
+  if(card) card.style.display=view==='card'?'block':'none';
+  if(btnF) btnF.classList.toggle('active',view==='full');
+  if(btnC) btnC.classList.toggle('active',view==='card');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEASON REVIEW + CERTIFICATE
+// ═══════════════════════════════════════════════════════════════
+
+function generateSeasonReview() {
+  var coach = _lastCoach || sessionStorage.getItem('coachName');
+  if (!coach) { alert('Please log in first.'); return; }
+  var btn = document.getElementById('seasonReviewBtn');
+  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+  callBackend('generateSeasonReview', [coach],
+    function(data) {
+      if (btn) { btn.innerHTML = '&#128196; Season Review PDF'; btn.disabled = false; }
+      if (!data || data.error) { alert(data ? data.error : 'Error generating season review.'); return; }
+      buildSeasonReviewPDF(data);
+    },
+    function(e) {
+      if (btn) { btn.innerHTML = '&#128196; Season Review PDF'; btn.disabled = false; }
+      alert('Error: ' + (e.message || String(e)));
+    }
+  );
+}
+
+function downloadSeasonCertificate() {
+  var coach = _lastCoach || sessionStorage.getItem('coachName');
+  if (!coach) { alert('Please log in first.'); return; }
+  var btn = document.getElementById('certBtn');
+  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+  callBackend('generateSeasonReview', [coach],
+    function(data) {
+      if (btn) { btn.innerHTML = '&#127885; Season Certificate'; btn.disabled = false; }
+      if (!data || data.error) { alert(data ? data.error : 'Error.'); return; }
+      buildCertificatePDF(data);
+    },
+    function(e) {
+      if (btn) { btn.innerHTML = '&#127885; Season Certificate'; btn.disabled = false; }
+      alert('Error: ' + (e.message || String(e)));
+    }
+  );
+}
+
+function buildSeasonReviewPDF(d) {
+  var J=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
+  if(!J){alert('PDF library not loaded.');return;}
+  var doc=new J({orientation:'portrait',unit:'mm',format:'a4'});
+  var PW=210,PH=297,M=18,CW=PW-M*2,y=0;
+  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
+  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
+  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
+  function chk(n){if(y+n>PH-16){doc.addPage();fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');fc('#1e3a5f');doc.rect(0,0,PW,10,'F');doc.setFontSize(7);doc.setFont('helvetica','normal');tc('#DBEAFE');doc.text('Voach  ·  '+(d.coachName||'')+'  ·  Season Review',M,6.5);sc('#E2E8F0',0.3);doc.line(M-4,16,M-4,PH-16);y=18;}}
+  function sp(n){y+=n;}
+  fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');
+  fc('#1e3a5f');doc.rect(0,0,PW,60,'F');
+  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  ANNUAL SEASON REVIEW',M,14);
+  tc('#FFFFFF');doc.setFontSize(24);doc.setFont('helvetica','bold');doc.text(d.coachName||'Coach',M,32);
+  tc('#94A3B8');doc.setFontSize(11);doc.setFont('helvetica','normal');doc.text((d.season||'')+' Season  ·  '+(d.sessionCount||0)+' Sessions',M,44);
+  sc('#E2E8F0',0.3);doc.line(M-4,60,M-4,PH-16);
+  y=72;
+  var n=d.narrative||{};
+  function aCard(label,lc,body,bg){if(!body)return;var bL=doc.splitTextToSize(body,CW-12);var h=8+bL.length*5.5+8;chk(h);var bgc=rgb(bg||'#F8FAFC');doc.setFillColor(bgc[0],bgc[1],bgc[2]);doc.roundedRect(M,y,CW,h,2,2,'F');var ac=rgb(lc);doc.setFillColor(ac[0],ac[1],ac[2]);doc.rect(M,y,3,h,'F');doc.setFontSize(7);doc.setFont('helvetica','bold');tc(lc);doc.text(label.toUpperCase(),M+8,y+5.5);doc.setFontSize(9.5);doc.setFont('helvetica','normal');tc('#334155');doc.text(bL,M+8,y+13);y+=h+6;}
+  aCard('Season story','#1e3a5f',n.openingPara,'#EFF6FF');
+  aCard('What grew','#22C55E',n.growthPara,'#F0FDF4');
+  aCard('Growth edge','#F59E0B',n.challengePara,'#FFFBEB');
+  aCard('Looking ahead','#8B5CF6',n.closingPara,'#F5F3FF');
+  if(n.nextSeasonFocus){chk(20);fc('#EFF6FF');doc.rect(M,y,CW,16,'F');sc('#1e3a5f',0.5);doc.rect(M,y,CW,16,'S');doc.setFontSize(11);doc.setFont('helvetica','bold');tc('#1e3a5f');doc.text(n.nextSeasonFocus,M+10,y+10);sp(20);}
+  var tp=doc.internal.getNumberOfPages();
+  for(var p=1;p<=tp;p++){doc.setPage(p);fc('#1e3a5f');doc.rect(0,PH-10,PW,10,'F');doc.setFontSize(7);doc.setFont('helvetica','normal');tc('#DBEAFE');doc.text('Voach  ·  '+(d.coachName||'')+'  ·  Season Review  ·  Confidential',M,PH-4);doc.text('Page '+p+' of '+tp,PW-M,PH-4,{align:'right'});}
+  doc.save('Voach_SeasonReview_'+(d.coachName||'Coach').replace(/\s+/g,'_')+'.pdf');
+}
+
+function buildCertificatePDF(d) {
+  var J=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
+  if(!J){alert('PDF library not loaded.');return;}
+  var doc=new J({orientation:'landscape',unit:'mm',format:'a4'});
+  var PW=297,PH=210,M=20;
+  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
+  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
+  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
+  fc('#0f172a');doc.rect(0,0,PW,PH,'F');
+  sc('#1e3a5f',0.5);doc.rect(8,8,PW-16,PH-16,'S');
+  sc('#3b82f6',0.3);doc.rect(10,10,PW-20,PH-20,'S');
+  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  COACHING DEVELOPMENT PLATFORM',PW/2,20,{align:'center'});
+  tc('#64748B');doc.setFontSize(11);doc.setFont('helvetica','normal');doc.text('This certifies that',PW/2,34,{align:'center'});
+  tc('#f8fafc');doc.setFontSize(36);doc.setFont('helvetica','bold');doc.text(d.coachName||'Coach',PW/2,55,{align:'center'});
+  tc('#64748B');doc.setFontSize(11);doc.setFont('helvetica','normal');doc.text('has completed',PW/2,68,{align:'center'});
+  tc('#93C5FD');doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text((d.season||'')+' Coaching Season  ·  '+(d.sessionCount||0)+' Sessions Analysed',PW/2,80,{align:'center'});
+  tc('#475569');doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text('Issued by Voach  ·  '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),PW/2,158,{align:'center'});
+  tc('#1e3a5f');doc.setFontSize(7);doc.text('voach.io  ·  Hear yourself coach.',PW/2,165,{align:'center'});
+  doc.save('Voach_Certificate_'+(d.coachName||'Coach').replace(/\s+/g,'_')+'.pdf');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PERSONAL BEST TOAST
+// ═══════════════════════════════════════════════════════════════
+
+function showPBToast(label, value, previous) {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#14532d;border:1px solid #22c55e;color:#86efac;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:320px;text-align:center;';
+  toast.innerHTML = '&#127942; New personal best!<br><span style="font-size:16px;">' + label + ': ' + parseFloat(value).toFixed(1) + '</span>';
+  document.body.appendChild(toast);
+  setTimeout(function(){ toast.style.opacity='0'; toast.style.transition='opacity 0.4s'; setTimeout(function(){ toast.remove(); }, 400); }, 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MILESTONE SHARE CARD
+// ═══════════════════════════════════════════════════════════════
+
+function showMilestoneCard(type, value, coachName, pbItems) {
+  var existing = document.getElementById('milestoneOverlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'milestoneOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+  var canvas = document.createElement('canvas');
+  canvas.width = 1080; canvas.height = 1080;
+  canvas.style.cssText = 'width:300px;height:300px;border-radius:16px;display:block;';
+  var ctx = canvas.getContext('2d');
+  var grad = ctx.createLinearGradient(0,0,1080,1080);
+  grad.addColorStop(0,'#0f172a'); grad.addColorStop(0.5,'#1e3a5f'); grad.addColorStop(1,'#0f172a');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,1080,1080);
+  ctx.fillStyle='rgba(30,58,95,0.8)'; ctx.fillRect(0,0,1080,100);
+  ctx.fillStyle='#93c5fd'; ctx.font='bold 32px system-ui,sans-serif'; ctx.textAlign='left'; ctx.fillText('VOACH',60,62);
+  ctx.fillStyle='#475569'; ctx.font='26px system-ui,sans-serif'; ctx.fillText('Hear yourself coach.',220,62);
+  ctx.textAlign='center';
+  if(type==='streak'){
+    ctx.font='120px system-ui'; ctx.fillText(value>=10?'&#x1F525;':'&#x26A1;',540,360);
+    ctx.fillStyle='#f8fafc'; ctx.font='bold 140px system-ui,sans-serif'; ctx.fillText(value,540,540);
+    ctx.fillStyle='#93c5fd'; ctx.font='bold 52px system-ui,sans-serif'; ctx.fillText('SESSION STREAK',540,620);
+  } else {
+    ctx.fillStyle='#f8fafc'; ctx.font='bold 52px system-ui,sans-serif'; ctx.fillText('PERSONAL BESTS',540,220);
+    var items=pbItems||[], cols=items.length<=2?1:2, cellW=cols===1?600:440, cellH=160, totalW=cols*cellW+(cols-1)*40, startX=(1080-totalW)/2;
+    items.slice(0,4).forEach(function(p,i){
+      var col=i%cols,row=Math.floor(i/cols),cx=startX+col*(cellW+40),cy=300+row*(cellH+20);
+      ctx.fillStyle='rgba(30,58,95,0.6)'; ctx.beginPath(); if(ctx.roundRect)ctx.roundRect(cx,cy,cellW,cellH,16); else ctx.rect(cx,cy,cellW,cellH); ctx.fill();
+      ctx.fillStyle='#64748b'; ctx.font='24px system-ui,sans-serif'; ctx.fillText((p.label||p.key||'').toUpperCase(),cx+cellW/2,cy+42);
+      ctx.fillStyle='#93c5fd'; ctx.font='bold 56px system-ui,sans-serif';
+      var raw=p.val!==undefined?p.val:(p.value!==undefined?p.value:0);
+      ctx.fillText(parseFloat(raw).toFixed(1)+(p.unit||''),cx+cellW/2,cy+112);
+    });
+  }
+  ctx.fillStyle='#f8fafc'; ctx.font='bold 40px system-ui,sans-serif'; ctx.fillText(coachName,540,920);
+  ctx.fillStyle='rgba(30,58,95,0.6)'; ctx.fillRect(0,980,1080,100);
+  ctx.fillStyle='#475569'; ctx.font='28px system-ui,sans-serif'; ctx.fillText('voach.io  ·  Coaching development, measured.',540,1036);
+  var btnRow=document.createElement('div'); btnRow.style.cssText='display:flex;gap:12px;margin-top:16px;';
+  var dlBtn=document.createElement('button'); dlBtn.textContent='Save Image'; dlBtn.style.cssText='background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;';
+  dlBtn.onclick=function(){var a=document.createElement('a');a.download='Voach_Milestone.png';a.href=canvas.toDataURL('image/png');a.click();};
+  var closeBtn=document.createElement('button'); closeBtn.textContent='Close'; closeBtn.style.cssText='background:transparent;color:#64748b;border:1px solid #334155;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;';
+  closeBtn.onclick=function(){overlay.remove();};
+  btnRow.appendChild(dlBtn); btnRow.appendChild(closeBtn); overlay.appendChild(canvas); overlay.appendChild(btnRow); document.body.appendChild(overlay);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONNECTION INSIGHT
+// ═══════════════════════════════════════════════════════════════
+
+function buildConnectionInsight(sessions, coach) {
+  var html='<div class="insight-dashboard">';
+  var last=sessions.slice(0,Math.min(2,sessions.length)), prev=sessions.slice(2,Math.min(4,sessions.length));
+  function avgM(arr){if(!arr.length)return null;var s={openQ:0,qi:0,praise:0,pc:0,tactical:0},cnt=0;arr.forEach(function(x){if(!x.report||!x.report.metrics)return;var m=x.report.metrics;s.openQ+=parseFloat(m.openQ)||0;s.qi+=parseFloat(m.qi)||0;s.praise+=parseFloat(m.praise)||0;s.pc+=parseFloat(m.pc)||0;s.tactical+=parseFloat(m.tactical)||0;cnt++;});if(!cnt)return null;return{openQ:+(s.openQ/cnt).toFixed(2),qi:+(s.qi/cnt).toFixed(2),praise:+(s.praise/cnt).toFixed(1),pc:+(s.pc/cnt).toFixed(2),tactical:+(s.tactical/cnt).toFixed(1)};}
+  var currM=avgM(last),prevM=avgM(prev);
+  var rows=[{label:'Discovery Questions',key:'openQ',unit:'/1000w'},{label:'Questioning Balance',key:'qi',unit:''},{label:'Positive Moments',key:'praise',unit:'/1000w'},{label:'Encouragement Ratio',key:'pc',unit:''},{label:'Game Language',key:'tactical',unit:'/1000w'}];
+  if(currM&&prevM){
+    html+='<div class="week-compare-card"><div class="week-compare-header"><div class="week-compare-title">This session vs last session</div><div class="week-compare-badge">Latest '+last.length+' vs previous '+prev.length+'</div></div>';
+    rows.forEach(function(r){var c=currM[r.key]||0,p=prevM[r.key]||0,d=+(c-p).toFixed(2),dec=(r.key==='qi'||r.key==='pc')?2:1;var dt=d>0.05?'+'+d:d<-0.05?String(d):'&rarr;';var dc=d>0.05?'delta-up':d<-0.05?'delta-down':'delta-flat';html+='<div class="week-metric-row"><div class="week-metric-label">'+r.label+'</div><div class="week-metric-vals"><div class="week-metric-prev">'+p.toFixed(dec)+r.unit+'</div><div class="week-metric-curr">'+c.toFixed(dec)+r.unit+'</div><div class="week-metric-delta '+dc+'">'+dt+'</div></div></div>';});
+    html+='</div>';
+    var fn=coach?coach.split(' ')[0]:'Coach',best=null,bd=0;
+    rows.forEach(function(r){var d=(currM[r.key]||0)-(prevM[r.key]||0);if(d>bd){bd=d;best=r;}});
+    html+='<div class="connection-card"><div class="connection-header">Connection insight</div>';
+    if(best&&bd>0.1){var dec2=(best.key==='qi'||best.key==='pc')?2:1;html+='<div class="connection-insight">'+fn+', your <span>'+best.label+'</span> moved from <span>'+prevM[best.key].toFixed(dec2)+'</span> to <span>'+currM[best.key].toFixed(dec2)+best.unit+'</span>. That shift means players are doing more thinking.</div>';}
+    else{html+='<div class="connection-insight">'+fn+', your metrics are holding steady. See the action below.</div>';}
+    html+='</div>';
+  } else if(currM){
+    html+='<div class="connection-card"><div class="connection-header">Getting started</div><div class="connection-insight">Upload one more session to unlock your week-on-week comparison.</div></div>';
+  }
+  if(currM){
+    var bms={openQ:3,qi:0.5,praise:5,pc:3,tactical:8},wk=null,wr=999;
+    Object.keys(bms).forEach(function(k){var r=(currM[k]||0)/(bms[k]||1);if(r<wr){wr=r;wk=k;}});
+    var acts={openQ:{t:'Add one more discovery question per block',b:'Before your next instruction, ask "What do you see?" just once more per block.'},qi:{t:'Replace one instruction with a question',b:'For every five things you say, make at least two questions.'},praise:{t:'Name one player and one specific action',b:'At least three times: name the player and what they did — not just "great job".'},pc:{t:'Find three things to praise before the next correction',b:'Every time you want to correct, find three genuine positives first.'},tactical:{t:'Reference your Main Principle by name three times',b:'Use specific game language from your plan. Players connect training to matches when you do.'}};
+    if(wk&&acts[wk]){html+='<div class="action-card"><div class="action-header">Action for next session</div><div class="action-title">'+acts[wk].t+'</div><div class="action-body">'+acts[wk].b+'</div></div>';}
+  }
+  html+='</div>';
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DIRECTOR PDF REPORTS
+// ═══════════════════════════════════════════════════════════════
+
+function buildDetailedClubPDF(d) {
+  var J=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
+  if(!J){alert('PDF library not loaded.');return;}
+  var doc=new J({orientation:'portrait',unit:'mm',format:'a4'});
+  var PW=210,PH=297,M=18,CW=PW-M*2,y=68;
+  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
+  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
+  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
+  d.program=d.program||'All Programs';
+  fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');
+  fc('#1e3a5f');doc.rect(0,0,PW,56,'F');
+  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  COACHING STAFF REPORT',M,12);
+  tc('#FFFFFF');doc.setFontSize(22);doc.setFont('helvetica','bold');doc.text(d.program,M,30);
+  tc('#94A3B8');doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text((d.season||'')+' Season  ·  Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),M,42);
+  (d.coaches||[]).forEach(function(c){
+    if(y>PH-30){doc.addPage();fc('#FFFFFF');doc.rect(0,0,PW,PH,'F');y=18;}
+    var sc2=c.uploadStatus==='recent'?'#16A34A':c.uploadStatus==='due'?'#D97706':'#DC2626';
+    fc('#F8FAFC');doc.rect(M,y,CW,18,'F');sc('#E2E8F0',0.2);doc.rect(M,y,CW,18,'S');
+    tc('#0F172A');doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(c.name,M+4,y+7);
+    tc('#64748B');doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text((c.seasonSessions||0)+' sessions  ·  '+(c.daysSince||'?')+' days since last upload',M+4,y+13);
+    var sdc=rgb(sc2);doc.setFillColor(sdc[0],sdc[1],sdc[2]);doc.circle(PW-M-4,y+9,2.5,'F');
+    y+=20;
+  });
+  var tp=doc.internal.getNumberOfPages();
+  for(var p=1;p<=tp;p++){doc.setPage(p);fc('#1e3a5f');doc.rect(0,PH-10,PW,10,'F');tc('#DBEAFE');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text('Voach  ·  '+d.program+'  ·  Staff Report  ·  Confidential',M,PH-4);doc.text('Page '+p+' of '+tp,PW-M,PH-4,{align:'right'});}
+  doc.save('Voach_StaffReport_'+(d.program).replace(/\s+/g,'_')+'.pdf');
+}
+
+function buildExecutiveSummaryPDF(d) {
+  var J=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(typeof jsPDF!=='undefined'?jsPDF:null);
+  if(!J){alert('PDF library not loaded.');return;}
+  var doc=new J({orientation:'landscape',unit:'mm',format:'a4'});
+  var PW=297,PH=210,M=20,CW=PW-M*2;
+  function rgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function tc(h){var c=rgb(h);doc.setTextColor(c[0],c[1],c[2]);}
+  function fc(h){var c=rgb(h);doc.setFillColor(c[0],c[1],c[2]);}
+  function sc(h,w){var c=rgb(h);doc.setDrawColor(c[0],c[1],c[2]);if(w)doc.setLineWidth(w);}
+  d.program=d.program||'All Programs';
+  fc('#0F172A');doc.rect(0,0,PW,PH,'F');
+  fc('#1E3A5F');doc.rect(0,0,PW,52,'F');
+  fc('#DBEAFE');doc.rect(0,0,PW,2,'F');
+  tc('#DBEAFE');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('VOACH  ·  PROGRAM EXECUTIVE SUMMARY',M,12);
+  tc('#FFFFFF');doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text(d.program,M,28);
+  tc('#94A3B8');doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text((d.season||'')+' Season',M,40);
+  var hs=d.healthScore||0,hsc=rgb(hs>=75?'#22C55E':hs>=50?'#F59E0B':'#EF4444');
+  doc.setFillColor(hsc[0],hsc[1],hsc[2]);doc.circle(PW-M-18,26,16,'F');
+  tc('#FFFFFF');doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(hs+'%',PW-M-18,29,{align:'center'});
+  var y2=64,sw=(CW-18)/4;
+  [{l:'Coaches',v:d.coachCount||0},{l:'Sessions',v:d.seasonSessions||0},{l:'Active',v:d.activeCoaches||0},{l:'Avg Teaching',v:(d.programAvg?Math.round(d.programAvg.ts):0)+'%'}].forEach(function(s,i){var sx=M+i*(sw+6);fc('#1E293B');doc.rect(sx,y2,sw,22,'F');sc('#1E3A5F',0.3);doc.rect(sx,y2,sw,22,'S');tc('#64748B');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(s.l.toUpperCase(),sx+sw/2,y2+6,{align:'center'});tc('#F8FAFC');doc.setFontSize(13);doc.setFont('helvetica','bold');doc.text(String(s.v),sx+sw/2,y2+16,{align:'center'});});
+  var y3=y2+30,colW=(CW-12)/2;
+  fc('#0F2A1A');doc.rect(M,y3,colW,70,'F');sc('#22C55E',0.4);doc.rect(M,y3,colW,70,'S');
+  tc('#22C55E');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('TOP PERFORMERS',M+8,y3+9);
+  (d.topCoaches||[]).slice(0,3).forEach(function(c,i){tc('#F8FAFC');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text((i+1)+'. '+c.name,M+8,y3+20+i*16);tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text((c.seasonSessions||0)+' sessions',M+8,y3+27+i*16);});
+  var nx=M+colW+12;
+  fc('#2A0F0F');doc.rect(nx,y3,colW,70,'F');sc('#EF4444',0.4);doc.rect(nx,y3,colW,70,'S');
+  tc('#EF4444');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('NEEDS ATTENTION',nx+8,y3+9);
+  (d.needsAttention||[]).slice(0,3).forEach(function(c,i){tc('#F8FAFC');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(c.name,nx+8,y3+20+i*16);tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text(c.daysSince>14?'No upload in '+c.daysSince+' days':(c.seasonSessions||0)+' sessions',nx+8,y3+27+i*16);});
+  fc('#0F172A');doc.rect(0,PH-12,PW,12,'F');tc('#475569');doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text('Voach  ·  voach.io  ·  Hear yourself coach.',PW/2,PH-5,{align:'center'});
+  doc.save('Voach_ExecutiveSummary_'+(d.program).replace(/\s+/g,'_')+'.pdf');
 }
 
 </script>

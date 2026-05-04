@@ -690,7 +690,7 @@
         <p class="progress-title">Analysing your session</p>
         <ul class="step-list">
           <li class="step-item active" id="step-upload"><span class="step-dot"></span>Uploading recording</li>
-          <li class="step-item" id="step-transcribe"><span class="step-dot"></span>Transcribing audio</li>
+          <li class="step-item" id="step-transcribe"><span class="step-dot"></span>Transcribing audio <span style="font-size:11px;color:#475569;">(2–4 mins)</span></li>
           <li class="step-item" id="step-metrics"><span class="step-dot"></span>Calculating metrics</li>
           <li class="step-item" id="step-report"><span class="step-dot"></span>Generating AI report</li>
         </ul>
@@ -798,11 +798,13 @@ function callBackend(fnName, args, onSuccess, onFailure) {
       // JSONP — bypasses CORS entirely for read-only calls
       var cbName = 'voachCb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
       var script = document.createElement('script');
+      // Longer timeout for analysis calls — AssemblyAI + Claude can take 3-4 mins
+      var timeoutMs = (fnName === 'transcribeAndSave' || fnName === 'analyseTranscript' || fnName === 'generateSeasonReview') ? 330000 : 35000;
       var timeout = setTimeout(function() {
         document.body.removeChild(script);
         delete window[cbName];
-        onFailure(new Error('Request timed out'));
-      }, 30000);
+        onFailure(new Error('Request timed out after ' + Math.round(timeoutMs/60000) + ' minutes. The session may have saved — check My Sessions.'));
+      }, timeoutMs);
       window[cbName] = function(data) {
         clearTimeout(timeout);
         document.body.removeChild(script);
@@ -1777,7 +1779,9 @@ function submitSession() {
         if(result&&result.error){ showUploadError(result.error); return; }
         setStep('step-transcribe','done'); setStep('step-report','active');
         if(result&&result.report){ clearInterval(window._pollInterval||0); setStep('step-report','done'); showResult(result.report); }
-        else { showUploadError('No report returned. Check My Sessions shortly.'); }
+        else {
+          showUploadError('Your session was saved but the report is still generating. Check My Sessions in a few minutes — it will appear there once ready.');
+        }
       },
       function(err){ showUploadError('Error: '+(err.message||String(err))); }
     );
@@ -1786,7 +1790,21 @@ function submitSession() {
   reader.readAsDataURL(fileToUse);
 }
 function setStep(id,s){ var el=document.getElementById(id); if(!el)return; el.classList.remove('active','done'); if(s)el.classList.add(s); }
-function showUploadError(msg){ document.getElementById('upload-progress').style.display='none'; document.getElementById('upload-form').style.display='block'; var e=document.getElementById('uploadError'); e.style.display='block'; e.textContent=msg; }
+function showUploadError(msg){
+  document.getElementById('upload-progress').style.display='none';
+  document.getElementById('upload-form').style.display='block';
+  var e=document.getElementById('uploadError');
+  e.style.display='block';
+  // Distinguish timeout/saved vs real error
+  var isSaved = msg && (msg.indexOf('saved') !== -1 || msg.indexOf('Check My Sessions') !== -1 || msg.indexOf('still generating') !== -1);
+  e.style.background = isSaved ? '#0a2017' : '#200a0a';
+  e.style.color       = isSaved ? '#22c55e' : '#ef4444';
+  e.style.border      = isSaved ? '1px solid #22c55e' : '1px solid #ef4444';
+  e.style.borderRadius = '10px';
+  e.style.padding      = '12px 14px';
+  e.style.fontSize     = '13px';
+  e.textContent = msg;
+}
 
 function showResult(report) {
   _lastReport=report;
@@ -2102,10 +2120,22 @@ function loadDashboard() {
   document.getElementById('dashboardContent').innerHTML = '<div class="loading-inline">Loading your sessions...</div>';
   callBackend('getCoachHistory', [coach],
     function(data) {
-      if (!data) { document.getElementById('dashboardContent').innerHTML = '<div class="empty-state">No session data found.</div>'; return; }
+      if (!data) {
+        document.getElementById('dashboardContent').innerHTML = '<div class="empty-state">No sessions yet. Upload your first session to begin.</div>';
+        return;
+      }
       document.getElementById('dashboardContent').innerHTML = renderDashboard(data, coach);
     },
-    function() { document.getElementById('dashboardContent').innerHTML = '<div class="empty-state">Error loading sessions. Please try again.</div>'; }
+    function(err) {
+      console.error('getCoachHistory error:', err);
+      document.getElementById('dashboardContent').innerHTML =
+        '<div class="empty-state" style="padding:20px;">' +
+        '<div style="font-size:18px;margin-bottom:8px;">&#128579;</div>' +
+        '<div style="font-weight:600;color:#f8fafc;margin-bottom:6px;">Could not load your sessions</div>' +
+        '<div style="font-size:13px;color:#64748b;margin-bottom:16px;">' + (err && err.message ? err.message : 'Network error') + '</div>' +
+        '<button class="submit-btn" onclick="loadDashboard()" style="padding:10px 20px;font-size:13px;">Try again</button>' +
+        '</div>';
+    }
   );
 }
 
@@ -2148,7 +2178,8 @@ function renderDashboard(data, coach) {
       var pills = [{label:'Questioning',key:'qi',val:metrics.qi||0,bm:bms.qi||0.5},{label:'Encouragement',key:'pc',val:metrics.pc||0,bm:bms.pc||3.0},{label:'Game Language',key:'tactical',val:metrics.tactical||0,bm:bms.tactical||7.0}].map(function(p){var cls=p.val>=p.bm?'pill-green':p.val>=p.bm*0.6?'pill-amber':'pill-red';return '<span class="session-pill '+cls+'">'+p.label+'</span>';}).join('');
       html += '<div class="session-card" id="scard-'+i+'">';
       html += '<div class="session-card-header" onclick="toggleSessionCard(\'scard-'+i+'\')">';
-      html += '<div class="session-avatar">'+(s.coachInitial||coach.charAt(0))+'</div>';
+      var initial = coach ? coach.charAt(0).toUpperCase() : 'C';
+      html += '<div class="session-avatar">'+initial+'</div>';
       html += '<div class="session-info"><div class="session-date">'+formatSheetDate(s.date)+' &middot; '+(s.ageGroup||'')+'</div>';
       html += '<div class="session-title">'+(report.profileLabel||'Training Session')+'</div>';
       if(s.objective) html += '<div style="font-size:12px;color:#475569;margin-top:2px;">'+s.objective+'</div>';
@@ -2174,7 +2205,47 @@ function renderDashboard(data, coach) {
 
 function toggleSessionCard(id) {
   var c = document.getElementById(id);
-  if (c) c.classList.toggle('expanded');
+  if (!c) return;
+  c.classList.toggle('expanded');
+  // Lazy-load report on first expand
+  if (c.classList.contains('expanded')) {
+    var idx = id.replace('scard-','');
+    var detail = document.getElementById('sdetail-'+idx);
+    if (detail && detail.getAttribute('data-loaded') === '0') {
+      var rowNum = parseInt(detail.getAttribute('data-rownum'));
+      var ag     = detail.getAttribute('data-agegroup') || '';
+      var placeholder = document.getElementById('sreport-'+idx);
+      if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#64748b;padding:12px;text-align:center;">Loading report...</div>';
+      callBackend('getStoredReport', [rowNum],
+        function(data) {
+          if (data && data.report) {
+            _sessionReportCache[parseInt(idx)] = data.report;
+            detail.setAttribute('data-loaded','1');
+            if (placeholder) placeholder.outerHTML = renderSessionReport(data.report, ag, parseInt(idx));
+          } else {
+            if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#64748b;padding:12px;text-align:center;">&#9203; Report not yet available. Check back in a few minutes.</div>';
+          }
+        },
+        function() {
+          if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#64748b;padding:12px;text-align:center;">Could not load report. Tap to try again.</div>';
+          detail.setAttribute('data-loaded','0');
+        }
+      );
+    }
+  }
+}
+
+function renderSessionReport(report, ag, idx) {
+  var rId = 'r' + idx;
+  var h = '';
+  h += '<div class="report-view-toggle">';
+  h += '<button class="report-view-btn" id="btn_full_'+rId+'" onclick="switchReportView(\'full\',\''+rId+'\',event)">Full Report</button>';
+  h += '<button class="report-view-btn active" id="btn_card_'+rId+'" onclick="switchReportView(\'card\',\''+rId+'\',event)">Coach Card</button>';
+  h += '</div>';
+  h += '<div id="view_full_'+rId+'" style="display:none;">'+buildReportHTML(report, ag, 'cv'+idx)+'</div>';
+  h += '<div id="view_card_'+rId+'">'+buildCoachCard(report, ag, rId)+'</div>';
+  h += '<button class="download-btn" style="margin-top:8px;width:100%;" onclick="triggerPDFFromCache('+idx+')">&#11015; Download Report</button>';
+  return h;
 }
 
 function triggerPDFFromCache(idx) {

@@ -1240,9 +1240,11 @@ function showUploadForm(name, program) {
     sd.value = today.getFullYear()+'-'+(String(today.getMonth()+1).padStart(2,'0'))+'-'+(String(today.getDate()).padStart(2,'0'));
   }
   // Subscription gate removed — all coaches have full access
-  // Load retention data (streak, PBs, pre-session focus)
+  // Load pre-session focus only (lightweight)
   callBackend('getCoachRetentionData', [name],
-    function(data){ if(data) renderRetentionUI(data, name); },
+    function(data){
+      if(data) renderRetentionUI(data, name);
+    },
     function(){});
 }
 
@@ -1287,97 +1289,29 @@ function openBillingPortal() {
 }
 
 function renderRetentionUI(data, name) {
-  var container = document.getElementById('retentionUI');
-  if (!container) return;
-  var html = '';
-  // Clear loading state
-  container.innerHTML = '';
-  var firstName = name.split(' ')[0];
+  var el = document.getElementById('retentionUI');
+  if (!el) return;
 
-  // Pre-session focus card
-  if (data.preFocus && data.preFocus.title) {
-    html += '<div class="prefocus-card">';
-    html += '<div class="prefocus-label">Your focus for today — from ' + (data.preFocus.from||'last session') + '</div>';
-    html += '<div class="prefocus-title">' + data.preFocus.title + '</div>';
-    if (data.preFocus.quote) html += '<div class="prefocus-quote">Try: &ldquo;' + data.preFocus.quote + '&rdquo;</div>';
-    html += '</div>';
+  var streak   = data.streak      || {};
+  var pbs      = data.personalBests || {};
+  var focus    = data.preFocus    || {};
+  var arc      = data.seasonArc   || {};
+  var html2    = '';
+
+  // ── Pre-session focus card (compact) ─────────────────────
+  if (focus.title) {
+    html2 += '<div class="prefocus-card">';
+    html2 += '<div class="prefocus-eyebrow">YOUR FOCUS TODAY</div>';
+    html2 += '<div class="prefocus-title">'+focus.title+'</div>';
+    if (focus.quote) html2 += '<div class="prefocus-quote">Try: &ldquo;'+focus.quote+'&rdquo;</div>';
+    html2 += '</div>';
   }
 
-  // Streak
-  var streak = data.streak || {};
-  if (streak.current > 0) {
-    var flame = streak.current >= 20 ? '🔥🔥' : streak.current >= 10 ? '🔥' : streak.current >= 5 ? '⚡' : '📈';
-    html += '<div class="streak-bar">';
-    html += '<div class="streak-flame">' + flame + '</div>';
-    html += '<div class="streak-info">';
-    html += '<div class="streak-number">' + streak.current + '-session streak</div>';
-    html += '<div class="streak-label">' + (data.season||'') + ' season</div>';
-    if (streak.longest > streak.current) html += '<div class="streak-best">Best ever: ' + streak.longest + ' sessions</div>';
-    else if (streak.longest > 1 && streak.current >= streak.longest) html += '<div class="streak-best" style="color:#22c55e;">Personal best streak! 🏆</div>';
-    html += '</div>';
-    // Share button for streak milestones
-    if (streak.current >= 5) {
-      html += '<button onclick="showMilestoneCard(\'streak\', ' + streak.current + ', \''+name+'\', null)" ' +
-              'style="width:100%;margin-top:8px;background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;' +
-              'border-radius:10px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">📤 Share this streak</button>';
-    }
-    html += '</div>';
-  }
-
-  // Personal bests
-  var pbs = data.personalBests || {};
-  var pbDefs = [
-    {key:'discoveryQ',   label:'Discovery Questions', unit:'/1000w'},
-    {key:'qiRatio',      label:'Questioning Balance',  unit:''},
-    {key:'gameLanguage', label:'Game Language',         unit:'/1000w'},
-    {key:'teachingScore',label:'Teaching Score',        unit:'%'}
-  ];
-  var pbItems = pbDefs.filter(function(p){ return (pbs[p.key]||0) > 0; });
-  if (pbItems.length > 0) {
-    html += '<div class="pb-panel"><div class="pb-title">Personal bests this season 🏆</div><div class="pb-grid">';
-    pbItems.forEach(function(p) {
-      html += '<div class="pb-item">';
-      html += '<div class="pb-item-label">' + p.label + '</div>';
-      var val = parseFloat(pbs[p.key]||0);
-      html += '<div class="pb-item-value">' + (p.key==='teachingScore' ? Math.round(val) : val.toFixed(1)) + p.unit + '</div>';
-      html += '</div>';
-    });
-    html += '</div>';
-    window._lastPBItems = pbItems;  // store safely — no inline serialisation
-    html += '<button onclick="showMilestoneCard(\'pb\', 0, \''+name+'\', window._lastPBItems)" ' +
-            'style="width:100%;margin-top:8px;background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;' +
-            'border-radius:10px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">📤 Share my bests</button>';
-    html += '</div>';
-  }
-
-  // Season arc
-  var arc = data.seasonArc;
-  if (arc && arc.sessionsAnalysed >= 6) {
-    function arcDelta(s, e) {
-      var d = parseFloat((e - s).toFixed(1));
-      return d > 0 ? {text: '+' + d, cls: 'arc-up'} : d < 0 ? {text: String(d), cls: 'arc-down'} : {text: '→', cls: 'arc-flat'};
-    }
-    html += '<div class="season-arc"><div class="arc-title">Your season arc (' + arc.sessionsAnalysed + ' sessions)</div>';
-    [
-      {label:'Discovery Questions', s: arc.startDiscoveryQ, e: arc.endDiscoveryQ, dec:1},
-      {label:'Questioning Balance',  s: arc.startQiRatio,    e: arc.endQiRatio,    dec:2},
-      {label:'Game Language',         s: arc.startGameLang,   e: arc.endGameLang,   dec:1}
-    ].forEach(function(r) {
-      var d = arcDelta(r.s, r.e);
-      html += '<div class="arc-row"><span class="arc-metric">' + r.label + '</span>';
-      html += '<span class="arc-values">' + parseFloat(r.s).toFixed(r.dec) + ' → ' + parseFloat(r.e).toFixed(r.dec) + '</span>';
-      html += '<span class="arc-delta ' + d.cls + '">' + d.text + '</span></div>';
-    });
-    html += '</div>';
-  }
-
-  if (!html) {
-    container.innerHTML = '<div style="background:#0f172a;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#475569;">Upload your first session to start tracking your development streak and personal bests.</div>';
-  } else {
-    container.innerHTML = html;
-  }
+  el.innerHTML = html2;
+  el.style.display = 'block';
 }
-// ── Program prompt for existing coaches with no program assigned ──
+
+
 function showEmailNudge(name) {
   var existing = document.getElementById('emailNudgeBar');
   if (existing) existing.remove();
@@ -2197,9 +2131,16 @@ function renderDashboard(data, coach) {
   if (data.sessions && data.sessions.length > 0) {
     html += '<div class="eyebrow" style="margin-top:20px;">SESSION HISTORY</div><div id="sessionList">';
     data.sessions.forEach(function(s, i) {
-      _sessionReportCache[i] = s.report;
-      var report = s.report || {}, metrics = report.metrics || {}, bms = report.benchmarks || {};
-      var pills = [{label:'Questioning',key:'qi',val:metrics.qi||0,bm:bms.qi||0.5},{label:'Encouragement',key:'pc',val:metrics.pc||0,bm:bms.pc||3.0},{label:'Game Language',key:'tactical',val:metrics.tactical||0,bm:bms.tactical||7.0}].map(function(p){var cls=p.val>=p.bm?'pill-green':p.val>=p.bm*0.6?'pill-amber':'pill-red';return '<span class="session-pill '+cls+'">'+p.label+'</span>';}).join('');
+      // report loaded lazily on expand — not available here
+      var sm = s.metrics || {}, sb = s.benchmarks || {};
+      var pills = [
+        {label:'Questioning', val:sm.qi||0,      bm:sb.qi||0.5},
+        {label:'Encouragement',val:sm.pc||0,     bm:sb.pc||3.0},
+        {label:'Game Language',val:sm.tactical||0,bm:sb.tactical||7.0}
+      ].map(function(p){
+        var cls = p.val>=p.bm?'pill-green':p.val>=p.bm*0.6?'pill-amber':'pill-red';
+        return '<span class="session-pill '+cls+'">'+p.label+'</span>';
+      }).join('');
       html += '<div class="session-card" id="scard-'+i+'">';
       html += '<div class="session-card-header" onclick="toggleSessionCard(\'scard-'+i+'\')">';
       var initial = coach ? coach.charAt(0).toUpperCase() : 'C';

@@ -1171,6 +1171,11 @@ function closeMetricModal() {
   if (el) el.remove();
 }
 
+function toggleMetricInfo(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
 // Event delegation for info buttons
 document.addEventListener('click', function(e) {
   var target = e.target;
@@ -2514,6 +2519,162 @@ function buildExecutiveSummaryPDF(d) {
   (d.needsAttention||[]).slice(0,3).forEach(function(c,i){tc('#F8FAFC');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(c.name,nx+8,y3+20+i*16);tc('#64748B');doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text(c.daysSince>14?'No upload in '+c.daysSince+' days':(c.seasonSessions||0)+' sessions',nx+8,y3+27+i*16);});
   fc('#0F172A');doc.rect(0,PH-12,PW,12,'F');tc('#475569');doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text('Voach  ·  voach.io  ·  Hear yourself coach.',PW/2,PH-5,{align:'center'});
   doc.save('Voach_ExecutiveSummary_'+(d.program).replace(/\s+/g,'_')+'.pdf');
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// BUILD Q-TIER BAR (question depth breakdown in full report)
+// ═══════════════════════════════════════════════════════════════
+function buildQTier(label, count, total, cls) {
+  if (!total || total === 0) return '';
+  var pct = Math.min(Math.round((count / total) * 100), 100);
+  var colors = {
+    'tier-surface':    {bar:'#64748b', bg:'#1e293b'},
+    'tier-connecting': {bar:'#3b82f6', bg:'#1e3a5f'},
+    'tier-extending':  {bar:'#22c55e', bg:'#0a2017'}
+  };
+  var c = colors[cls] || {bar:'#3b82f6', bg:'#1e293b'};
+  if (pct === 0 && count === 0) return '';
+  return '<div style="margin-bottom:6px;">' +
+    '<div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:3px;">' +
+    '<span>' + label + '</span><span>' + count + ' (' + pct + '%)</span></div>' +
+    '<div style="height:6px;border-radius:3px;background:#0f172a;overflow:hidden;">' +
+    '<div style="height:100%;border-radius:3px;background:' + c.bar + ';width:' + pct + '%;"></div>' +
+    '</div></div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOWNLOAD PDF — session report
+// ═══════════════════════════════════════════════════════════════
+function downloadPDF(report, coachName, ageGroup, sessionDate) {
+  var jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
+  if (!jsPDFLib) { alert('PDF library not loaded. Please refresh the page.'); return; }
+
+  var doc = new jsPDFLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  var PW = 210, PH = 297, M = 18, CW = PW - M * 2, y = 0;
+
+  function rgb(h) { h = h.replace('#',''); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+  function tc(h) { var c = rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  function fc(h) { var c = rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function sc(h, w) { var c = rgb(h); doc.setDrawColor(c[0],c[1],c[2]); if (w) doc.setLineWidth(w); }
+  function nl(n) { y += (n || 6); }
+  function chk(n) {
+    if (y + n > PH - 16) {
+      doc.addPage();
+      fc('#FFFFFF'); doc.rect(0, 0, PW, PH, 'F');
+      fc('#1e3a5f'); doc.rect(0, 0, PW, 10, 'F');
+      doc.setFontSize(7); doc.setFont('helvetica','normal');
+      tc('#DBEAFE'); doc.text('Voach  ·  ' + coachName + '  ·  ' + (sessionDate||''), M, 6.5);
+      sc('#E2E8F0', 0.3); doc.line(M-4, 16, M-4, PH-16);
+      y = 18;
+    }
+  }
+
+  // Header
+  fc('#FFFFFF'); doc.rect(0, 0, PW, PH, 'F');
+  fc('#1e3a5f'); doc.rect(0, 0, PW, 58, 'F');
+  tc('#DBEAFE'); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('VOACH  ·  SESSION REPORT', M, 12);
+  tc('#FFFFFF'); doc.setFontSize(20); doc.setFont('helvetica','bold');
+  doc.text(coachName || 'Coach', M, 28);
+  tc('#94A3B8'); doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text((sessionDate||'') + '  ·  ' + (ageGroup||'') + '  ·  ' + (report.sessionType||'Training'), M, 40);
+  if (report.profileLabel) {
+    tc('#DBEAFE'); doc.setFontSize(10); doc.setFont('helvetica','italic');
+    doc.text(report.profileLabel, M, 51);
+  }
+  sc('#E2E8F0', 0.3); doc.line(M-4, 60, M-4, PH-16);
+  y = 70;
+
+  // Metrics
+  var metrics = report.metrics || {}, bms = report.benchmarks || {};
+  var metDefs = [
+    {label:'Discovery Questions', key:'openQ',    unit:'/1000w', bm:3.0},
+    {label:'Questioning Balance',  key:'qi',       unit:' ratio', bm:0.5},
+    {label:'Positive Moments',     key:'praise',   unit:'/1000w', bm:5.0},
+    {label:'Encouragement Ratio',  key:'pc',       unit:' ratio', bm:3.0},
+    {label:'Game Language',        key:'tactical', unit:'/1000w', bm:7.0}
+  ];
+
+  doc.setFontSize(7); doc.setFont('helvetica','bold'); tc('#64748B');
+  doc.text('SESSION METRICS', M, y); nl(8);
+
+  metDefs.forEach(function(m) {
+    chk(20);
+    var val = parseFloat(metrics[m.key]) || 0;
+    var bm  = parseFloat(bms[m.key]) || m.bm;
+    var isOn = val >= bm, isDev = val >= bm * 0.6;
+    var barCol = isOn ? '#22c55e' : isDev ? '#f59e0b' : '#ef4444';
+    var stTxt  = isOn ? 'On target' : isDev ? 'Developing' : 'Below target';
+    var pct = Math.min((val / (bm * 2)) * 100, 100);
+
+    tc('#F8FAFC'); doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text(m.label, M, y);
+    doc.setFont('helvetica','bold');
+    var vc = rgb(barCol); doc.setTextColor(vc[0],vc[1],vc[2]);
+    doc.text(val.toFixed(m.key==='qi'||m.key==='pc'?2:1) + m.unit, PW-M, y, {align:'right'});
+    nl(5);
+    // Bar
+    fc('#1e293b'); doc.rect(M, y, CW, 4, 'F');
+    fc(barCol); doc.rect(M, y, CW * (pct/100), 4, 'F');
+    // Benchmark tick
+    var bmc = rgb('#334155'); doc.setFillColor(bmc[0],bmc[1],bmc[2]);
+    doc.rect(M + CW * 0.5 - 0.5, y - 1, 1, 6, 'F');
+    nl(7);
+    tc('#64748B'); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text(stTxt + ' · target ' + bm.toFixed(1) + m.unit, M, y);
+    nl(8);
+  });
+
+  // What went well
+  if (report.wentWell) {
+    nl(4); chk(30);
+    doc.setFontSize(7); doc.setFont('helvetica','bold'); tc('#64748B');
+    doc.text('WHAT WENT WELL', M, y); nl(6);
+    var wLines = doc.splitTextToSize(report.wentWell, CW - 8);
+    chk(wLines.length * 5.5 + 16);
+    fc('#F0FDF4'); doc.roundedRect(M, y, CW, wLines.length * 5.5 + 12, 2, 2, 'F');
+    var gc = rgb('#22c55e'); doc.setFillColor(gc[0],gc[1],gc[2]);
+    doc.rect(M, y, 3, wLines.length * 5.5 + 12, 'F');
+    tc('#14532D'); doc.setFontSize(9.5); doc.setFont('helvetica','normal');
+    doc.text(wLines, M + 8, y + 8);
+    nl(wLines.length * 5.5 + 16);
+  }
+
+  // Focus area
+  if (report.focusArea && report.focusArea.title) {
+    chk(30);
+    doc.setFontSize(7); doc.setFont('helvetica','bold'); tc('#64748B');
+    doc.text('FOCUS FOR NEXT SESSION', M, y); nl(6);
+    var focLines = doc.splitTextToSize(report.focusArea.title + (report.focusArea.why ? '  ' + report.focusArea.why : ''), CW - 8);
+    chk(focLines.length * 5.5 + 20);
+    fc('#FFFBEB'); doc.roundedRect(M, y, CW, focLines.length * 5.5 + 16, 2, 2, 'F');
+    var ac = rgb('#f59e0b'); doc.setFillColor(ac[0],ac[1],ac[2]);
+    doc.rect(M, y, 3, focLines.length * 5.5 + 16, 'F');
+    tc('#78350F'); doc.setFontSize(9.5); doc.setFont('helvetica','normal');
+    doc.text(focLines, M + 8, y + 8);
+    if (report.focusArea.quote) {
+      nl(focLines.length * 5.5 + 10);
+      chk(14);
+      tc('#D97706'); doc.setFontSize(9); doc.setFont('helvetica','italic');
+      doc.text('"' + report.focusArea.quote + '"', M + 8, y);
+      nl(10);
+    } else {
+      nl(focLines.length * 5.5 + 16);
+    }
+  }
+
+  // Footer
+  var tp = doc.internal.getNumberOfPages();
+  for (var p = 1; p <= tp; p++) {
+    doc.setPage(p);
+    fc('#1e3a5f'); doc.rect(0, PH-10, PW, 10, 'F');
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); tc('#DBEAFE');
+    doc.text('Voach  ·  ' + coachName + '  ·  Session Report  ·  Confidential', M, PH-4);
+    doc.text('Page ' + p + ' of ' + tp, PW-M, PH-4, {align:'right'});
+  }
+
+  doc.save('Voach_Report_' + (coachName||'Coach').replace(/\s+/g,'_') + '_' + (sessionDate||'').replace(/[^0-9a-z-]/gi,'_') + '.pdf');
 }
 
 </script>

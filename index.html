@@ -2081,15 +2081,34 @@ function loadDashboard() {
   }
   document.getElementById('dashboard-sub').textContent = 'Season overview — ' + coach;
   document.getElementById('dashboardContent').innerHTML = '<div class="loading-inline">Loading your sessions...</div>';
+
+  // Show a visible message if it takes more than 8 seconds
+  var loadingTimer = setTimeout(function() {
+    var el = document.getElementById('dashboardContent');
+    if (el && el.innerHTML.indexOf('Loading your sessions') !== -1) {
+      el.innerHTML += '<div style="font-size:12px;color:#475569;margin-top:12px;text-align:center;">Still loading...</div>';
+    }
+  }, 8000);
+
   callBackend('getCoachHistory', [coach],
     function(data) {
+      clearTimeout(loadingTimer);
       if (!data) {
         document.getElementById('dashboardContent').innerHTML = '<div class="empty-state">No sessions yet. Upload your first session to begin.</div>';
         return;
       }
-      document.getElementById('dashboardContent').innerHTML = renderDashboard(data, coach);
+      try {
+        document.getElementById('dashboardContent').innerHTML = renderDashboard(data, coach);
+      } catch(renderErr) {
+        document.getElementById('dashboardContent').innerHTML =
+          '<div class="empty-state" style="padding:20px;">' +
+          '<div style="font-size:13px;color:#ef4444;margin-bottom:8px;">Render error: ' + renderErr.message + '</div>' +
+          '<div style="font-size:11px;color:#334155;font-size:11px;">' + (renderErr.stack||'').substring(0,300) + '</div>' +
+          '</div>';
+      }
     },
     function(err) {
+      clearTimeout(loadingTimer);
       console.error('getCoachHistory error:', err);
       document.getElementById('dashboardContent').innerHTML =
         '<div class="empty-state" style="padding:20px;">' +

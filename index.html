@@ -2168,11 +2168,14 @@ function renderDashboard(data, coach) {
       html += '<div class="session-card" id="scard-'+i+'">';
       html += '<div class="session-card-header" onclick="toggleSessionCard(\'scard-'+i+'\')">';
       var initial = coach ? coach.charAt(0).toUpperCase() : 'C';
-      html += '<div class="session-avatar">'+initial+'</div>';
-      html += '<div class="session-info"><div class="session-date">'+formatSheetDate(s.date)+' &middot; '+(s.ageGroup||'')+'</div>';
-      html += '<div class="session-title">'+(s.profileLabel||s.sessionType||'Training Session')+'</div>';
-      if(s.objective) html += '<div style="font-size:12px;color:#475569;margin-top:2px;">'+s.objective+'</div>';
-      html += '<div style="margin-top:6px;">'+pills+'</div></div>';
+      html += '<div style="width:40px;height:40px;border-radius:50%;background:#1e3a5f;color:#93c5fd;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;">'+initial+'</div>';
+      var sessionLabel = s.sessionType && s.sessionType !== 'Training' ? s.sessionType : '';
+      html += '<div class="session-info" style="flex:1;min-width:0;">';
+      html += '<div class="session-date-line">'+formatSheetDate(s.date)+(s.ageGroup?' &middot; '+s.ageGroup:'')+(sessionLabel?' &middot; '+sessionLabel:'')+'</div>';
+      html += '<div class="session-title-line">'+(s.profileLabel||'Training Session')+'</div>';
+      if(s.objective) html += '<div class="session-obj-line">'+s.objective.substring(0,80)+(s.objective.length>80?'...':'')+'</div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+pills+'</div>';
+      html += '</div>';
       html += '<div class="session-chevron">&#9650;</div></div>';
       html += '<div class="session-detail" id="sdetail-'+i+'" data-rownum="'+(s.rowNum||'')+'" data-agegroup="'+(s.ageGroup||'')+'" data-loaded="0">';
       html += '<div id="sreport-'+i+'" style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;">';
@@ -2215,8 +2218,16 @@ function toggleSessionCard(id) {
             if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#64748b;padding:12px;text-align:center;">&#9203; Report not yet available. Check back in a few minutes.</div>';
           }
         },
-        function() {
-          if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#64748b;padding:12px;text-align:center;">Could not load report. Tap to try again.</div>';
+        function(err) {
+          var errMsg = err && err.message ? err.message : 'Network error';
+          if (placeholder) {
+            placeholder.innerHTML =
+              '<div style="background:#200a0a;border-radius:10px;padding:14px;text-align:center;">' +
+              '<div style="font-size:13px;color:#ef4444;margin-bottom:6px;">Could not load report</div>' +
+              '<div style="font-size:11px;color:#64748b;margin-bottom:10px;">' + errMsg + '</div>' +
+              '<button onclick="retryLoadReport(this)" data-idx="' + idx + '" data-rownum="' + rowNum + '" data-ag="' + ag + '" style="background:#1e3a5f;border:none;color:#93c5fd;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;">Try again</button>' +
+              '</div>';
+          }
           detail.setAttribute('data-loaded','0');
         }
       );
@@ -2235,6 +2246,29 @@ function renderSessionReport(report, ag, idx) {
   h += '<div id="view_card_'+rId+'">'+buildCoachCard(report, ag, rId)+'</div>';
   h += '<button class="download-btn" style="margin-top:8px;width:100%;" onclick="triggerPDFFromCache('+idx+')">&#11015; Download Report</button>';
   return h;
+}
+
+function retryLoadReport(btn) {
+  var idx    = btn.getAttribute('data-idx');
+  var rowNum = parseInt(btn.getAttribute('data-rownum'));
+  var ag     = btn.getAttribute('data-ag') || '';
+  var detail = document.getElementById('sdetail-'+idx);
+  var placeholder = document.getElementById('sreport-'+idx);
+  if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#64748b;padding:12px;text-align:center;">Loading report...</div>';
+  callBackend('getStoredReport', [rowNum],
+    function(data) {
+      if (data && data.report) {
+        _sessionReportCache[parseInt(idx)] = data.report;
+        if (detail) detail.setAttribute('data-loaded','1');
+        if (placeholder) placeholder.outerHTML = renderSessionReport(data.report, ag, parseInt(idx));
+      } else {
+        if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#64748b;padding:12px;text-align:center;">&#9203; Report not yet available.</div>';
+      }
+    },
+    function(err) {
+      if (placeholder) placeholder.innerHTML = '<div style="font-size:13px;color:#ef4444;padding:12px;text-align:center;">Failed: ' + (err&&err.message?err.message:'Network error') + '</div>';
+    }
+  );
 }
 
 function triggerPDFFromCache(idx) {

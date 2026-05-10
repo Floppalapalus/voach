@@ -1,3 +1,3 @@
 # Voach
-> *Hear yourself coach.*
+> Hear yourself coach.
 https://floppalapalus.github.io/voach

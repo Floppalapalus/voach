@@ -5,8 +5,8 @@
   "start_url": "/voach/",
   "scope": "/voach/",
   "display": "standalone",
-  "background_color": "#0A0F1E",
-  "theme_color": "#2563EB",
+  "background_color": "#07090f",
+  "theme_color": "#1a56db",
   "icons": [
     {
       "src": "icon-192.png",

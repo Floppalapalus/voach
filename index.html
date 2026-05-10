@@ -301,6 +301,28 @@
   .t3-sub{font-size:11px;color:#334155;margin-top:2px;}
   /* Connection insight dashboard */
   .insight-dashboard{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
+  .week-compare-card{background:#1e293b;border-radius:14px;padding:16px;border:1px solid #334155;}
+  .week-compare-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .week-compare-title{font-size:12px;font-weight:700;letter-spacing:0.5px;color:#64748b;text-transform:uppercase;}
+  .week-compare-badge{font-size:10px;font-weight:700;background:#1e3a5f;color:#3b82f6;padding:3px 8px;border-radius:10px;}
+  .week-metric-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #0f172a;}
+  .week-metric-row:last-child{border-bottom:none;}
+  .week-metric-label{font-size:12px;color:#64748b;flex:1;}
+  .week-metric-vals{display:flex;align-items:center;gap:8px;}
+  .week-metric-prev{font-size:12px;color:#334155;text-decoration:line-through;}
+  .week-metric-curr{font-size:13px;font-weight:700;color:#f8fafc;}
+  .week-metric-delta{font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;}
+  .delta-up{background:#0a2017;color:#22c55e;}
+  .delta-down{background:#200a0a;color:#ef4444;}
+  .delta-flat{background:#1e293b;color:#475569;}
+  .connection-card{background:#1e3a5f;border:1px solid #3b82f6;border-radius:14px;padding:16px;}
+  .connection-header{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#3b82f6;margin-bottom:8px;}
+  .connection-insight{font-size:13px;color:#f8fafc;line-height:1.6;margin-bottom:6px;}
+  .connection-insight span{color:#93c5fd;font-weight:700;}
+  .action-card{background:#0f172a;border:1px solid #1e3a5f;border-radius:14px;padding:16px;}
+  .action-header{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f59e0b;margin-bottom:6px;}
+  .action-title{font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:5px;}
+  .action-body{font-size:12px;color:#64748b;line-height:1.5;}
   .week-compare-card{background:#1e293b;border-radius:16px;padding:18px;border:1px solid #334155;}
   .week-compare-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .week-compare-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;}
@@ -2123,9 +2145,9 @@ function loadDashboard() {
 
 function renderDashboard(data, coach) {
   var html = '';
-  html += '<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;">';
-  html += '<button class="download-btn" id="seasonReviewBtn" onclick="generateSeasonReview()" style="font-size:13px;padding:10px 18px;">&#128196; Season Review PDF</button>';
-  html += '<button class="download-btn" id="certBtn" onclick="downloadSeasonCertificate()" style="font-size:13px;padding:10px 18px;margin-left:8px;">&#127885; Season Certificate</button>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:16px;">';
+  html += '<button class="download-btn" id="seasonReviewBtn" onclick="generateSeasonReview()" style="font-size:12px;padding:8px 14px;flex:1;">&#128196; Season Review</button>';
+  html += '<button class="download-btn" id="certBtn" onclick="downloadSeasonCertificate()" style="font-size:12px;padding:8px 14px;flex:1;">&#127885; Certificate</button>';
   html += '</div>';
   if (data.sessions && data.sessions.length >= 2) {
     html += buildConnectionInsight(data.sessions, coach);
@@ -2134,11 +2156,12 @@ function renderDashboard(data, coach) {
     var sa = data.seasonAvg, bt = data.behaviorTotals || {};
     html += '<div class="season-card">';
     html += '<div class="eyebrow">SEASON SUMMARY — ' + (data.sessions ? data.sessions.length : 0) + ' SESSIONS</div>';
+    var sc = data.sessions ? data.sessions.length : 0;
     html += '<div class="stat-grid">';
-    html += '<div class="stat-box"><div class="stat-num">' + (data.sessions ? data.sessions.length : 0) + '</div><div class="stat-lbl">Sessions</div></div>';
-    html += '<div class="stat-box"><div class="stat-num">' + (sa.openQ||0).toFixed(1) + '</div><div class="stat-lbl">Avg Discovery Q</div></div>';
-    html += '<div class="stat-box"><div class="stat-num">' + (sa.qi||0).toFixed(2) + '</div><div class="stat-lbl">Avg Q:I</div></div>';
-    html += '<div class="stat-box"><div class="stat-num">' + (sa.praise||0).toFixed(1) + '</div><div class="stat-lbl">Avg Praise</div></div>';
+    html += '<div class="stat-box"><div class="stat-num">' + sc + '</div><div class="stat-lbl">Sessions</div></div>';
+    html += '<div class="stat-box"><div class="stat-num">' + (sa.qi||0).toFixed(2) + '</div><div class="stat-lbl">Avg Q:I Ratio</div></div>';
+    html += '<div class="stat-box"><div class="stat-num">' + (sa.openQ||0).toFixed(1) + '</div><div class="stat-lbl">Discovery Q / 1000w</div></div>';
+    html += '<div class="stat-box"><div class="stat-num">' + (sa.praise||0).toFixed(1) + '</div><div class="stat-lbl">Praise / 1000w</div></div>';
     html += '</div>';
     var ms = [{label:'Discovery Questions',key:'openQ',val:sa.openQ||0,bm:3.0,unit:'/1000w'},{label:'Questioning Balance',key:'qi',val:sa.qi||0,bm:0.5,unit:' ratio'},{label:'Positive Moments',key:'praise',val:sa.praise||0,bm:5.0,unit:'/1000w'},{label:'Encouragement Ratio',key:'pc',val:sa.pc||0,bm:3.0,unit:' ratio'},{label:'Game Language',key:'tactical',val:sa.tactical||0,bm:7.0,unit:'/1000w'}];
     ms.forEach(function(m) {

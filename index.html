@@ -1321,6 +1321,39 @@ function showCoachDetail(idx){
 
 var _currentDetailCoach='';
 function _submitNoteForCurrent(){ submitDirNote(_currentDetailCoach); }
+
+function loadAIPrompt(){
+  var btn=document.getElementById('aiPromptBtn');
+  var wrap=document.getElementById('aiPromptResult');
+  var txt=document.getElementById('aiPromptText');
+  if(!btn)return;
+  btn.disabled=true; btn.textContent='Generating...';
+  var pin=sessionStorage.getItem('dp')||'';
+  call('generateDirectorPrompt',[pin,_currentDetailCoach],function(r){
+    btn.disabled=false; btn.textContent='✦ Suggest a note with AI';
+    if(r&&r.prompt){
+      txt.textContent=r.prompt;
+      wrap.style.display='block';
+    }else{
+      btn.textContent='Could not generate — try again';
+      setTimeout(function(){btn.textContent='✦ Suggest a note with AI';},2500);
+    }
+  },function(e){
+    btn.disabled=false; btn.textContent='✦ Suggest a note with AI';
+    alert('Error generating prompt: '+(e.message||e));
+  });
+}
+
+function useAIPrompt(){
+  var txt=document.getElementById('aiPromptText');
+  var inp=document.getElementById('dirNoteInput');
+  if(txt&&inp){
+    inp.value=txt.textContent;
+    inp.focus();
+    // Smooth scroll to textarea
+    inp.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
 function submitDirNote(coachName){
   var note=(document.getElementById('dirNoteInput')||{}).value||'';
   if(!note.trim()){alert('Please write a note first.');return;}

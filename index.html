@@ -278,6 +278,9 @@ textarea{resize:none;line-height:1.5}
     </div>
     <div class="new-hint" id="newHint">New coach — fill in your details below to get started.</div>
     <div id="newFields" style="display:none">
+      <div class="lbl mt">Club / Organisation</div>
+      <input id="lClub" type="text" placeholder="e.g. NCFC Youth, Sporting KC Academy...">
+      <div class="input-help">This lets your club director see your sessions in their dashboard.</div>
       <div class="lbl mt">Program</div>
       <select id="lProg"><option value="">Select program...</option>
         <option>Recreation</option><option>Challenge</option><option>Juniors</option><option>Classic</option>
@@ -454,6 +457,21 @@ textarea{resize:none;line-height:1.5}
   <div class="sheet"><div class="sheet-handle"></div><div id="infoContent"></div></div>
 </div>
 
+<!-- ══ CLUB PROMPT (existing coaches without club) ══════════ -->
+<div class="overlay" id="clubOverlay" style="display:none">
+  <div class="overlay-bg"></div>
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">One quick thing</div>
+    <div class="sheet-body">What club or organisation do you coach with? This lets your club director see your coaching development in their dashboard.</div>
+    <div class="lbl" style="margin-top:0">Club / Organisation</div>
+    <input id="clubInput" type="text" placeholder="e.g. NCFC Youth, Sporting KC Academy...">
+    <div class="input-help">You can skip this — it can be added later.</div>
+    <button class="btn" onclick="saveClub()" style="margin-top:12px">Save →</button>
+    <button class="btn-xs" onclick="skipClub()" style="display:block;margin-top:10px;text-align:center;width:100%">Skip for now</button>
+  </div>
+</div>
+
 <!-- ══ ONBOARDING ════════════════════════════════════════ -->
 <div class="overlay" id="onboardOverlay" style="display:none">
   <div class="overlay-bg" onclick="closeOnboard()"></div>
@@ -477,6 +495,7 @@ var _cache={};
 var _dirProg=null,_dirSuper=false,_aPin='';
 var PROGS=['Recreation','Challenge','Juniors','Classic','NPL','ECNL-RL','ECNL','Academy'];
 var _dirCoaches={};
+var _club='', _dirClub=null;
 
 // ═══════════ BACKEND ══════════════════════════════════════
 var BU='https://script.google.com/macros/s/AKfycbzF4tiGQOBoKLkq7aM0GpKVkM45yd18CS6xaQKrXcoPTxfNRWVFTulwrXI3EtES71EA/exec';
@@ -534,7 +553,7 @@ function goTo(name,btn){
   updType();
   call('getCoachNames',[],function(n){_names=n||[];},function(){});
   var sv=sessionStorage.getItem('vc');
-  if(sv){try{var o=JSON.parse(sv);_coach=o.n;_prog=o.p;_pin=o.k;onIn();}catch(e){}}
+  if(sv){try{var o=JSON.parse(sv);_coach=o.n;_prog=o.p;_pin=o.k;_club=o.cl||'';onIn();}catch(e){}}
 })();
 
 function onLName(){
@@ -577,12 +596,14 @@ function doLogin(){
   var btn=document.getElementById('lBtn');
   btn.disabled=true;btn.textContent='Signing in...';
   showErr('lErr',null);
-  call('coachLogin',[n,p,prog,email],function(r){
+  var club=document.getElementById('lClub')?document.getElementById('lClub').value.trim():'';
+  call('coachLogin',[n,p,prog,email,club],function(r){
     btn.disabled=false;btn.textContent='Continue →';
     if(r&&r.success){
-      _coach=n;_prog=r.program||prog;_pin=p;
-      sessionStorage.setItem('vc',JSON.stringify({n:_coach,p:_prog,k:_pin}));
+      _coach=n;_prog=r.program||prog;_club=r.club||'';_pin=p;
+      sessionStorage.setItem('vc',JSON.stringify({n:_coach,p:_prog,k:_pin,cl:_club}));
       onIn();
+      if(r.needsClub) setTimeout(function(){document.getElementById('clubOverlay').style.display='flex';},800);
     }else showErr('lErr',(r&&r.message)||'Incorrect PIN.');
   },function(e){btn.disabled=false;btn.textContent='Continue →';showErr('lErr','Error: '+(e.message||e));});
 }
@@ -1005,12 +1026,14 @@ function chkDirPin(){
   showErr('dirPinErr',null);
   call('checkDirectorPin',[pin],function(r){
     if(r&&r.valid){
-      _dirSuper=r.isSuperAdmin;_dirProg=r.program||null;
+      _dirSuper=r.isSuperAdmin;_dirProg=r.program||null;_dirClub=r.club||null;
       sessionStorage.setItem('dp',pin);
       document.getElementById('dirGate').style.display='none';
       document.getElementById('dirView').style.display='block';
-      document.getElementById('dirTitle').textContent=r.isSuperAdmin?'Director Overview':'Director';
-      document.getElementById('dirSub').textContent=r.isSuperAdmin?'All programs':r.program||'';
+      var titleTxt = r.isSuperAdmin ? 'Director Overview' : r.isClubDirector ? r.club+' — Club View' : 'Director';
+      var subTxt = r.isSuperAdmin ? 'All programs' : r.isClubDirector ? 'Coaches from '+r.club : r.program||'';
+      document.getElementById('dirTitle').textContent=titleTxt;
+      document.getElementById('dirSub').textContent=subTxt;
       if(r.isSuperAdmin){
         var ps=document.getElementById('progSel');ps.style.display='block';
         var btns='<div style="display:flex;flex-wrap:wrap;gap:5px"><button class="dtab on" onclick="fltDir(null,this)">All</button>';
@@ -1035,8 +1058,10 @@ function showDP(n,btn){
 function loadDir(prog){
   document.getElementById('dp-dash').innerHTML='<div class="loading">Loading</div>';
   document.getElementById('dp-coaches').innerHTML='<div class="loading">Loading</div>';
-  call('getDirectorDashboard',[prog],renderDirDash,function(){document.getElementById('dp-dash').innerHTML='<div class="empty-state">Error loading dashboard.</div>';});
-  call('getDirectorViewForProgram',[prog],renderDirCoaches,function(){document.getElementById('dp-coaches').innerHTML='<div class="empty-state">Error loading coaches.</div>';});
+  // Pass club context if this is a club director
+  var clubCtx = _dirClub || null;
+  call('getDirectorDashboard',[prog,clubCtx],renderDirDash,function(){document.getElementById('dp-dash').innerHTML='<div class="empty-state">Error loading dashboard.</div>';});
+  call('getDirectorViewForProgram',[prog,clubCtx],renderDirCoaches,function(){document.getElementById('dp-coaches').innerHTML='<div class="empty-state">Error loading coaches.</div>';});
   renderDirGoals(prog);renderDirReports(prog);
 }
 function renderDirDash(d){
@@ -1163,11 +1188,17 @@ function renderAdmin(d){
     '<div class="lbl mt">PIN</div><input id="aPIN" type="password">'+
     '<div class="lbl mt">Email (optional)</div><input id="aE" type="email">'+
     '<button class="btn" onclick="addC()" style="margin-top:12px">Add Coach →</button></div>';
-  html+='<div class="hr"></div><div class="eyebrow" style="margin-bottom:10px">Director PINs</div>'+
+  html+='<div class="hr"></div><div class="eyebrow" style="margin-bottom:10px">Director PINs — by program</div>'+
     '<div class="card"><div class="lbl" style="margin-top:0">Program</div><select id="dPP">'+PROGS.map(function(p){return '<option>'+p+'</option>';}).join('')+'</select>'+
-    '<div class="lbl mt">New PIN</div><input id="dPPIN" type="password">'+
+    '<div class="lbl mt">PIN</div><input id="dPPIN" type="password">'+
     '<div class="lbl mt">Email (optional)</div><input id="dPE" type="email">'+
-    '<button class="btn" onclick="setDirPin()" style="margin-top:12px">Set Director PIN →</button></div>';
+    '<button class="btn" onclick="setDirPin()" style="margin-top:12px">Set Program Director PIN →</button></div>';
+  html+='<div class="hr"></div><div class="eyebrow" style="margin-bottom:10px">Director PINs — by club</div>'+
+    '<div class="input-help" style="margin-bottom:10px">Give a club director access to see all coaches from their club.</div>'+
+    '<div class="card"><div class="lbl" style="margin-top:0">Club name (must match exactly what coaches enter)</div><input id="dcN" type="text" placeholder="e.g. NCFC Youth">'+
+    '<div class="lbl mt">PIN</div><input id="dcPIN" type="password">'+
+    '<div class="lbl mt">Email (optional)</div><input id="dcE" type="email">'+
+    '<button class="btn" onclick="setClubDirPin()" style="margin-top:12px">Set Club Director PIN →</button></div>';
   document.getElementById('adminContent').innerHTML=html;
 }
 function rstPin(n){
@@ -1185,52 +1216,137 @@ function setDirPin(){
   if(!p||pin.length<4){alert('Select program and enter PIN (4+ digits).');return;}
   call('setDirectorPin',[_aPin,p,pin,e],function(r){if(r&&r.success)alert('Director PIN set for '+p+' ✓');else alert((r&&r.error)||'Error');},function(e){alert('Error: '+(e.message||e));});
 }
+function setClubDirPin(){
+  var n=(document.getElementById('dcN')||{}).value||'';
+  var pin=(document.getElementById('dcPIN')||{}).value||'';
+  var e=(document.getElementById('dcE')||{}).value||'';
+  if(!n||pin.length<4){alert('Enter club name and PIN (4+ digits).');return;}
+  call('setClubDirectorPin',[_aPin,n,pin,e],function(r){if(r&&r.success)alert('Club director PIN set for '+n+' ✓');else alert((r&&r.error)||'Error');},function(e2){alert('Error: '+(e2.message||e2));});
+}
 function rstAdmin(){document.getElementById('adminGate').style.display='block';document.getElementById('adminView').style.display='none';document.getElementById('adminPin').value='';}
 
 // ═══════════ UTILITIES ═════════════════════════════════════
 function escStr(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 
+function saveClub(){
+  var club=(document.getElementById('clubInput')||{}).value||'';
+  if(!club.trim()){skipClub();return;}
+  _club=club.trim();
+  var sv=sessionStorage.getItem('vc');
+  if(sv){try{var o=JSON.parse(sv);o.cl=_club;sessionStorage.setItem('vc',JSON.stringify(o));}catch(e){}}
+  call('updateCoachClub',[_coach,_club],function(){},function(){});
+  document.getElementById('clubOverlay').style.display='none';
+}
+function skipClub(){
+  document.getElementById('clubOverlay').style.display='none';
+}
+
 function showCoachDetail(idx){
   var c=_dirCoaches[idx]||{};
   var name=c.name||'Coach';
-  // Show a bottom sheet with coach detail
   var a=c.avgs||{};
-  var sessions=c.sessions||c.seasonSessions||0;
+  var sessions=c.sessions||0;
   var dc=c.uploadStatus==='recent'?'var(--green)':c.uploadStatus==='due'?'var(--amber)':'var(--red)';
-  var dTxt=c.daysSince===0?'Today':c.daysSince===1?'Yesterday':(c.daysSince||'?')+' days ago';
+  var dTxt=c.daysSince===0?'Today':c.daysSince===1?'Yesterday':(c.daysSince!==undefined?c.daysSince+'d ago':'—');
+
+  // Header
   var html='<div class="sheet-title">'+name+'</div>';
-  if(c.program)html+='<div style="font-size:12px;color:var(--t2);margin-bottom:14px">'+c.program+'</div>';
+  var meta='';
+  if(c.program&&c.program!=='—') meta+=c.program;
+  if(c.club) meta+=(meta?' · ':'')+c.club;
+  if(meta) html+='<div style="font-size:12px;color:var(--t2);margin-bottom:10px">'+meta+'</div>';
+
+  // Stats row
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">'+
     '<div class="stat-box"><div class="stat-n">'+sessions+'</div><div class="stat-l">Sessions</div></div>'+
-    '<div class="stat-box" style="border-color:'+dc+'"><div class="stat-n" style="color:'+dc+'">'+dTxt+'</div><div class="stat-l">Last upload</div></div>'+
+    '<div class="stat-box" style="border-color:'+dc+'">'+
+    '<div class="stat-n" style="color:'+dc+'">'+dTxt+'</div>'+
+    '<div class="stat-l">Last upload</div></div>'+
     '</div>';
-  if(a.openQ||a.qi||a.praise||a.pc||a.tactical){
+
+  // Profile label
+  if(c.profileLabel){
+    html+='<div style="background:var(--blued);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--bluel);margin-bottom:14px">'+c.profileLabel+'</div>';
+  }
+
+  // Season averages — Coach Card style
+  var bm={openQ:3,qi:0.5,praise:5,pc:3,tactical:7};
+  var defs=[{k:'openQ',l:'Discovery Questions',u:'/1000w'},{k:'qi',l:'Questioning Balance',u:' ratio'},{k:'praise',l:'Positive Moments',u:'/1000w'},{k:'pc',l:'Encouragement Ratio',u:' ratio'},{k:'tactical',l:'Game Language',u:'/1000w'}];
+  var hasAny=defs.some(function(d){return parseFloat(a[d.k]||0)>0;});
+  if(hasAny){
     html+='<div class="eyebrow" style="margin-bottom:10px">Season averages</div>';
-    var bm={openQ:3,qi:0.5,praise:5,pc:3,tactical:7};
-    [{k:'openQ',l:'Discovery Questions',u:'/1000w'},{k:'qi',l:'Questioning Balance',u:' ratio'},{k:'praise',l:'Positive Moments',u:'/1000w'},{k:'pc',l:'Encouragement Ratio',u:' ratio'},{k:'tactical',l:'Game Language',u:'/1000w'}].forEach(function(m){
-      var v=parseFloat(a[m.k])||0;
-      if(!v)return;
-      var pct=Math.min((v/(bm[m.k]*2))*100,100).toFixed(1);
-      var cls=v>=bm[m.k]?'fillg':v>=bm[m.k]*0.6?'filla':'fillr';
-      var st=v>=bm[m.k]?'mg':v>=bm[m.k]*0.6?'ma':'mr';
-      var dec=m.k==='qi'||m.k==='pc'?2:1;
-      html+='<div class="mbar-wrap"><div class="mbar-top"><span class="mbar-name">'+m.l+'</span><span class="mbar-val">'+v.toFixed(dec)+m.u+'</span></div>'+
-        '<div class="mbar-track"><div class="mbar-fill '+cls+'" style="width:'+pct+'%"></div><div class="mbar-bm" style="left:50%"></div></div>'+
-        '<div class="mbar-st '+st+'">'+(v>=bm[m.k]?'On target':v>=bm[m.k]*0.6?'Developing':'Below target')+' · Target '+bm[m.k]+m.u+'</div></div>';
+    html+='<div class="cc-grid">';
+    defs.forEach(function(d){
+      var v=parseFloat(a[d.k])||0;
+      var b=bm[d.k]||1;
+      var on=v>=b,dev=v>=b*0.6;
+      var cls=on?'g':dev?'a':'r';
+      var st=on?'On target':dev?'Developing':'Needs focus';
+      var dec=d.k==='qi'||d.k==='pc'?2:1;
+      html+='<div class="cc-cell '+cls+'">'+
+        '<div class="cc-desc">'+d.l+'</div>'+
+        '<div class="cc-val">'+(v>0?v.toFixed(dec)+d.u:'—')+'</div>'+
+        '<div class="cc-status">'+(v>0?st:'No data')+'</div>'+
+        '</div>';
     });
+    html+='</div>';
   }
-  if(c.recentSessions&&c.recentSessions.length){
-    html+='<div class="eyebrow" style="margin:14px 0 8px">Recent sessions</div>';
-    c.recentSessions.slice(0,5).forEach(function(s){
-      var d=s.date?new Date(s.date):null;
-      var ds=d&&!isNaN(d)?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):s.date||'—';
-      html+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">'+
-        '<span style="color:var(--t2)">'+ds+(s.ageGroup?' · '+s.ageGroup:'')+'</span>'+
-        '<span style="color:var(--t3)">'+(s.sessionType||'Training')+'</span></div>';
-    });
-  }
+
+  // Director notes section
+  html+='<div class="eyebrow" style="margin:16px 0 8px">Director notes</div>';
+  html+='<div id="dirNoteHistory" style="font-size:12px;color:var(--t3);margin-bottom:10px;line-height:1.6">Loading...</div>';
+  html+='<textarea id="dirNoteInput" style="min-height:80px" placeholder="Write a note or feedback for '+name+' — it will be emailed to them and saved here..."></textarea>';
+  html+='<button class="btn" id="dirNoteBtn" onclick="_submitNoteForCurrent()" style="margin-top:10px">Send note to '+name.split(' ')[0]+' →</button>';
+  html+='<div id="dirNoteStatus" style="font-size:12px;margin-top:8px"></div>';
+  _currentDetailCoach = name;
+
   document.getElementById('infoContent').innerHTML=html;
   document.getElementById('infoOverlay').style.display='flex';
+
+  // Load existing notes
+  var pin=sessionStorage.getItem('dp')||'';
+  call('getDirectorNotes',[pin,name],function(r){
+    var el=document.getElementById('dirNoteHistory');
+    if(!el)return;
+    if(r&&r.notes){
+      var lines=r.notes.split('\n---\n');
+      el.innerHTML=lines.map(function(n){
+        return '<div style="background:var(--s1);border-radius:6px;padding:8px 10px;margin-bottom:6px;white-space:pre-wrap">'+n+'</div>';
+      }).join('');
+    }else{
+      el.textContent='No notes yet.';
+    }
+  },function(){var el=document.getElementById('dirNoteHistory');if(el)el.textContent='Could not load notes.';});
+}
+
+var _currentDetailCoach='';
+function _submitNoteForCurrent(){ submitDirNote(_currentDetailCoach); }
+function submitDirNote(coachName){
+  var note=(document.getElementById('dirNoteInput')||{}).value||'';
+  if(!note.trim()){alert('Please write a note first.');return;}
+  var pin=sessionStorage.getItem('dp')||'';
+  var btn=document.getElementById('dirNoteBtn');
+  if(btn){btn.disabled=true;btn.textContent='Sending...';}
+  call('saveDirectorNote',[pin,coachName,note.trim()],function(r){
+    var st=document.getElementById('dirNoteStatus');
+    if(st)st.innerHTML='<span style="color:var(--greenl)">✓ Note saved</span>';
+    var ni=document.getElementById('dirNoteInput');if(ni)ni.value='';
+    var nbtn=document.getElementById('dirNoteBtn');if(nbtn){nbtn.disabled=false;nbtn.textContent='Save note for '+coachName.split(' ')[0]+'  ';}
+    // Reload notes
+    var pin2=sessionStorage.getItem('dp')||'';
+    call('getDirectorNotes',[pin2,coachName],function(r2){
+      var el=document.getElementById('dirNoteHistory');
+      if(!el||!r2||!r2.notes)return;
+      var lines=r2.notes.split('\n---\n');
+      el.innerHTML=lines.map(function(n){
+        return '<div style="background:var(--s1);border-radius:6px;padding:8px 10px;margin-bottom:6px;white-space:pre-wrap">'+n+'</div>';
+      }).join('');
+    },function(){});
+  },function(e){
+    var st=document.getElementById('dirNoteStatus');
+    if(st)st.innerHTML='<span style="color:var(--redl)">Error: '+(e.message||e)+'</span>';
+    var nbtn=document.getElementById('dirNoteBtn');if(nbtn){nbtn.disabled=false;nbtn.textContent='Save note for '+coachName.split(' ')[0]+'  ';}
+  });
 }
 
 // ═══════════ ONBOARDING ════════════════════════════════════

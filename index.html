@@ -125,6 +125,9 @@ textarea{resize:none;line-height:1.5}
 .cc-status{font-size:10px;font-weight:600;margin-top:3px}
 .cc-cell.g .cc-status{color:var(--greenl)}.cc-cell.a .cc-status{color:var(--amberl)}.cc-cell.r .cc-status{color:var(--redl)}
 .cc-footer{background:var(--s1);border-radius:10px;padding:12px;margin-top:8px}
+.cc-ww{background:var(--greend);border:1px solid var(--green);border-radius:10px;padding:12px;margin-top:8px}
+.cc-ww-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--greenl);margin-bottom:5px}
+.cc-ww-text{font-size:13px;color:var(--t1);line-height:1.6}
 .cc-profile{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:4px}
 .cc-focus-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-bottom:3px}
 .cc-focus-text{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:2px}
@@ -233,6 +236,13 @@ textarea{resize:none;line-height:1.5}
 .logout-btn{background:transparent;border:1px solid var(--bd);border-radius:8px;color:var(--t3);font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit}
 .dl-btn{width:100%;background:var(--s1);color:var(--bluel);border:1px solid var(--blued);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit}
 .stars-row{display:flex;gap:8px;padding:6px 0}
+.ob-step{text-align:center;padding:4px 0 8px}
+.ob-icon{font-size:48px;margin-bottom:14px}
+.ob-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:10px}
+.ob-body{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:8px}
+.ob-tip{font-size:12px;color:var(--t3);background:var(--s1);border-radius:8px;padding:10px 12px;margin-top:10px;line-height:1.5}
+.ob-dot{width:7px;height:7px;border-radius:50%;background:var(--bd)}
+.ob-dot.on{background:var(--blue)}
 .star{font-size:26px;cursor:pointer;opacity:.25;transition:opacity .1s}
 .star.lit{opacity:1}
 #coachDrop{position:absolute;left:0;right:0;top:calc(100% + 3px);background:var(--s2);border:1px solid var(--bd);border-radius:10px;z-index:100;max-height:200px;overflow-y:auto;display:none;box-shadow:0 12px 32px rgba(0,0,0,.5)}
@@ -444,6 +454,19 @@ textarea{resize:none;line-height:1.5}
   <div class="sheet"><div class="sheet-handle"></div><div id="infoContent"></div></div>
 </div>
 
+<!-- ══ ONBOARDING ════════════════════════════════════════ -->
+<div class="overlay" id="onboardOverlay" style="display:none">
+  <div class="overlay-bg" onclick="closeOnboard()"></div>
+  <div class="sheet" id="onboardSheet">
+    <div class="sheet-handle"></div>
+    <div id="onboardSlide"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px">
+      <div id="onboardDots" style="display:flex;gap:6px"></div>
+      <button class="btn" id="onboardNext" onclick="nextOnboard()" style="width:auto;padding:10px 24px;margin-top:0">Next →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 // ═══════════ STATE ════════════════════════════════════════
@@ -453,6 +476,7 @@ var _tab='audio',_file=null,_fbR=0;
 var _cache={};
 var _dirProg=null,_dirSuper=false,_aPin='';
 var PROGS=['Recreation','Challenge','Juniors','Classic','NPL','ECNL-RL','ECNL','Academy'];
+var _dirCoaches={};
 
 // ═══════════ BACKEND ══════════════════════════════════════
 var BU='https://script.google.com/macros/s/AKfycbzF4tiGQOBoKLkq7aM0GpKVkM45yd18CS6xaQKrXcoPTxfNRWVFTulwrXI3EtES71EA/exec';
@@ -567,6 +591,9 @@ function onIn(){
   document.getElementById('nav').classList.add('show');
   document.getElementById('s-upload').classList.add('active');
   document.getElementById('upSub').textContent=_coach+(_prog?' · '+_prog:'');
+  // Show onboarding for new coaches (first time only)
+  var isNewCoach=!localStorage.getItem('voach_onboarded');
+  if(isNewCoach) setTimeout(showOnboarding, 600);
   // Load focus cue
   call('getCoachRetentionData',[_coach],function(d){
     if(d&&d.preFocus&&d.preFocus.title){
@@ -866,6 +893,15 @@ function buildCC(r,uid){
       '</div>';
   });
   html+='</div>';
+
+  // What went well
+  if(r.wentWell){
+    html+='<div class="cc-ww">'+
+      '<div class="cc-ww-label">What went well</div>'+
+      '<div class="cc-ww-text">'+r.wentWell+'</div>'+
+      '</div>';
+  }
+
   // Footer — focus + profile
   var hasFooter=(r.focusArea&&r.focusArea.title)||r.profileLabel;
   if(hasFooter){
@@ -1005,11 +1041,17 @@ function loadDir(prog){
 }
 function renderDirDash(d){
   if(!d){document.getElementById('dp-dash').innerHTML='<div class="empty-state">No data yet.</div>';return;}
+  // Field mapping: backend uses totalCoaches/totalSessions, derive active from uploadFrequency
+  var totalCoaches = d.totalCoaches || d.coachCount || 0;
+  var totalSessions = d.totalSessions || d.seasonSessions || 0;
+  var activeCoaches = d.uploadFrequency ? d.uploadFrequency.filter(function(u){return u.status==='recent';}).length : (d.activeCoaches||0);
+  // Health = % of coaches who uploaded in last 14 days
+  var healthScore = totalCoaches > 0 ? Math.round((d.uploadFrequency||[]).filter(function(u){return u.daysSince<=14;}).length / totalCoaches * 100) : 0;
   var html='<div class="stat-row">'+
-    '<div class="stat-box"><div class="stat-n">'+(d.coachCount||0)+'</div><div class="stat-l">Coaches</div></div>'+
-    '<div class="stat-box"><div class="stat-n">'+(d.seasonSessions||0)+'</div><div class="stat-l">Sessions</div></div>'+
-    '<div class="stat-box"><div class="stat-n">'+(d.activeCoaches||0)+'</div><div class="stat-l">Active</div></div>'+
-    '<div class="stat-box"><div class="stat-n">'+(d.healthScore||0)+'%</div><div class="stat-l">Health</div></div></div>';
+    '<div class="stat-box"><div class="stat-n">'+totalCoaches+'</div><div class="stat-l">Coaches</div></div>'+
+    '<div class="stat-box"><div class="stat-n">'+totalSessions+'</div><div class="stat-l">Sessions</div></div>'+
+    '<div class="stat-box"><div class="stat-n">'+activeCoaches+'</div><div class="stat-l">Active</div></div>'+
+    '<div class="stat-box"><div class="stat-n">'+healthScore+'%</div><div class="stat-l">Health</div></div></div>';
   if(d.heatmap&&d.heatmap.length){
     html+='<div class="eyebrow" style="margin-bottom:8px">Metric heatmap</div>';
     html+='<div style="display:flex;gap:4px;margin-bottom:6px;padding-left:114px">'+
@@ -1036,10 +1078,23 @@ function renderDirDash(d){
 function renderDirCoaches(d){
   if(!d||!d.coaches||!d.coaches.length){document.getElementById('dp-coaches').innerHTML='<div class="empty-state">No coaches found.</div>';return;}
   var html='';
-  d.coaches.forEach(function(c){
+  _dirCoaches={};
+  d.coaches.forEach(function(c,i){
     var dc=c.uploadStatus==='recent'?'dg':c.uploadStatus==='due'?'da':'dr';
     var a=c.avgs||{};
-    html+='<div class="coach-row"><div class="coach-row-info"><div class="coach-row-name">'+c.name+' <span class="badge">'+c.program+'</span></div><div class="coach-row-meta">'+c.seasonSessions+' sessions · DQ '+(a.openQ||0).toFixed(1)+' · Q:I '+(a.qi||0).toFixed(2)+'</div></div><div class="sdot '+dc+'"></div></div>';
+    var sessions = c.sessions || c.seasonSessions || 0;
+    var daysTxt = c.daysSince===0?'today':c.daysSince===1?'yesterday':c.daysSince+' days ago';
+    var meta = sessions+' sessions';
+    if(a.openQ) meta += ' · DQ '+(a.openQ||0).toFixed(1)+' · Q:I '+(a.qi||0).toFixed(2);
+    if(c.daysSince!==undefined) meta += ' · Last: '+daysTxt;
+    var prog = c.program && c.program !== '—' ? ' <span class="badge">'+c.program+'</span>' : '';
+    _dirCoaches[i]=c;
+    html+='<div class="coach-row" onclick="showCoachDetail('+i+')">'+
+      '<div class="coach-row-info">'+
+      '<div class="coach-row-name">'+c.name+prog+'</div>'+
+      '<div class="coach-row-meta">'+meta+'</div>'+
+      '</div><div style="display:flex;align-items:center;gap:8px"><div class="sdot '+dc+'"></div>'+
+      '<span style="font-size:16px;color:var(--t3)">›</span></div></div>';
   });
   document.getElementById('dp-coaches').innerHTML=html;
 }
@@ -1133,6 +1188,100 @@ function setDirPin(){
 function rstAdmin(){document.getElementById('adminGate').style.display='block';document.getElementById('adminView').style.display='none';document.getElementById('adminPin').value='';}
 
 // ═══════════ UTILITIES ═════════════════════════════════════
+function escStr(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+function showCoachDetail(idx){
+  var c=_dirCoaches[idx]||{};
+  var name=c.name||'Coach';
+  // Show a bottom sheet with coach detail
+  var a=c.avgs||{};
+  var sessions=c.sessions||c.seasonSessions||0;
+  var dc=c.uploadStatus==='recent'?'var(--green)':c.uploadStatus==='due'?'var(--amber)':'var(--red)';
+  var dTxt=c.daysSince===0?'Today':c.daysSince===1?'Yesterday':(c.daysSince||'?')+' days ago';
+  var html='<div class="sheet-title">'+name+'</div>';
+  if(c.program)html+='<div style="font-size:12px;color:var(--t2);margin-bottom:14px">'+c.program+'</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">'+
+    '<div class="stat-box"><div class="stat-n">'+sessions+'</div><div class="stat-l">Sessions</div></div>'+
+    '<div class="stat-box" style="border-color:'+dc+'"><div class="stat-n" style="color:'+dc+'">'+dTxt+'</div><div class="stat-l">Last upload</div></div>'+
+    '</div>';
+  if(a.openQ||a.qi||a.praise||a.pc||a.tactical){
+    html+='<div class="eyebrow" style="margin-bottom:10px">Season averages</div>';
+    var bm={openQ:3,qi:0.5,praise:5,pc:3,tactical:7};
+    [{k:'openQ',l:'Discovery Questions',u:'/1000w'},{k:'qi',l:'Questioning Balance',u:' ratio'},{k:'praise',l:'Positive Moments',u:'/1000w'},{k:'pc',l:'Encouragement Ratio',u:' ratio'},{k:'tactical',l:'Game Language',u:'/1000w'}].forEach(function(m){
+      var v=parseFloat(a[m.k])||0;
+      if(!v)return;
+      var pct=Math.min((v/(bm[m.k]*2))*100,100).toFixed(1);
+      var cls=v>=bm[m.k]?'fillg':v>=bm[m.k]*0.6?'filla':'fillr';
+      var st=v>=bm[m.k]?'mg':v>=bm[m.k]*0.6?'ma':'mr';
+      var dec=m.k==='qi'||m.k==='pc'?2:1;
+      html+='<div class="mbar-wrap"><div class="mbar-top"><span class="mbar-name">'+m.l+'</span><span class="mbar-val">'+v.toFixed(dec)+m.u+'</span></div>'+
+        '<div class="mbar-track"><div class="mbar-fill '+cls+'" style="width:'+pct+'%"></div><div class="mbar-bm" style="left:50%"></div></div>'+
+        '<div class="mbar-st '+st+'">'+(v>=bm[m.k]?'On target':v>=bm[m.k]*0.6?'Developing':'Below target')+' · Target '+bm[m.k]+m.u+'</div></div>';
+    });
+  }
+  if(c.recentSessions&&c.recentSessions.length){
+    html+='<div class="eyebrow" style="margin:14px 0 8px">Recent sessions</div>';
+    c.recentSessions.slice(0,5).forEach(function(s){
+      var d=s.date?new Date(s.date):null;
+      var ds=d&&!isNaN(d)?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):s.date||'—';
+      html+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">'+
+        '<span style="color:var(--t2)">'+ds+(s.ageGroup?' · '+s.ageGroup:'')+'</span>'+
+        '<span style="color:var(--t3)">'+(s.sessionType||'Training')+'</span></div>';
+    });
+  }
+  document.getElementById('infoContent').innerHTML=html;
+  document.getElementById('infoOverlay').style.display='flex';
+}
+
+// ═══════════ ONBOARDING ════════════════════════════════════
+var _obStep=0;
+var ONBOARD_STEPS=[
+  {icon:'🎙',title:'Welcome to Voach',
+   body:'Voach helps you hear yourself coach and improve. After each training session, upload a voice memo and get an AI report on your coaching behaviour.',
+   tip:'Record using your iPhone Voice Memos app. Clip it to your shirt or put it in your pocket.'},
+  {icon:'📊',title:'Your Coach Card',
+   body:'After each session you will see your Coach Card — five metrics that show how you coached. Green means on target, amber means developing, red means needs focus.',
+   tip:'Every metric has a button that explains what it means and gives you a specific thing to try next session.'},
+  {icon:'📋',title:'My Sessions',
+   body:'Tap My Sessions in the nav bar to see all your sessions. They are grouped by month. Tap any session to see your full Coach Card for that session.',
+   tip:'Your season summary at the top shows your average across all sessions — this is what improves over time.'},
+  {icon:'🎯',title:'Focus for next session',
+   body:'Every Coach Card ends with one specific thing to work on. This is your focus for your next session — one change that will move your coaching forward.',
+   tip:'Read it before your next session. Try the suggested question at least once. Small changes compound.'},
+  {icon:'✅',title:'You are ready to go',
+   body:'Upload your first session and see your Coach Card. The more sessions you upload, the more you will understand your coaching patterns over time.',
+   tip:''}
+];
+
+function showOnboarding(){
+  _obStep=0;
+  renderOnboard();
+  document.getElementById('onboardOverlay').style.display='flex';
+}
+function closeOnboard(){
+  document.getElementById('onboardOverlay').style.display='none';
+  localStorage.setItem('voach_onboarded','1');
+}
+function nextOnboard(){
+  if(_obStep<ONBOARD_STEPS.length-1){_obStep++;renderOnboard();}
+  else closeOnboard();
+}
+function renderOnboard(){
+  var s=ONBOARD_STEPS[_obStep];
+  var isLast=_obStep===ONBOARD_STEPS.length-1;
+  document.getElementById('onboardSlide').innerHTML=
+    '<div class="ob-step">'+
+    '<div class="ob-icon">'+s.icon+'</div>'+
+    '<div class="ob-title">'+s.title+'</div>'+
+    '<div class="ob-body">'+s.body+'</div>'+
+    (s.tip?'<div class="ob-tip">'+s.tip+'</div>':'')+
+    '</div>';
+  document.getElementById('onboardNext').textContent=isLast?'Get started ✓':'Next →';
+  var dots='';
+  ONBOARD_STEPS.forEach(function(_,i){dots+='<div class="ob-dot'+(i===_obStep?' on':'')+'"></div>';});
+  document.getElementById('onboardDots').innerHTML=dots;
+}
+
 function showErr(id,msg,type){
   var el=document.getElementById(id);if(!el)return;
   if(!msg){el.style.display='none';el.textContent='';return;}

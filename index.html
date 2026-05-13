@@ -128,6 +128,32 @@ textarea{resize:none;line-height:1.5}
 .cc-ww{background:var(--greend);border:1px solid var(--green);border-radius:10px;padding:12px;margin-top:8px}
 .cc-ww-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--greenl);margin-bottom:5px}
 .cc-ww-text{font-size:13px;color:var(--t1);line-height:1.6}
+
+/* Top players section */
+.cc-players{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-top:8px}
+.cc-players-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.cc-player-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.cc-player-row:last-child{border-bottom:none}
+.cc-player-name{color:var(--t1);font-weight:600}
+.cc-player-count{color:var(--t3);font-size:11px}
+.cc-player-bar{flex:1;height:4px;background:var(--bd);border-radius:2px;margin:0 12px;overflow:hidden}
+.cc-player-fill{height:100%;background:var(--bluel);border-radius:2px}
+
+/* Question depth section */
+.cc-qdepth{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-top:8px}
+.cc-qdepth-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.cc-qtier{margin-bottom:10px}
+.cc-qtier:last-child{margin-bottom:0}
+.cc-qtier-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.cc-qtier-name{font-size:12px;font-weight:600;color:var(--t1)}
+.cc-qtier-desc{font-size:10px;color:var(--t3);margin-top:1px}
+.cc-qtier-count{font-size:12px;font-weight:700;color:var(--t1)}
+.cc-qtier-track{height:5px;background:var(--bd);border-radius:3px;overflow:hidden;margin-top:5px}
+.cc-qtier-fill{height:100%;border-radius:3px}
+.qt-surface{background:var(--t3)}
+.qt-connecting{background:var(--bluel)}
+.qt-extending{background:var(--green)}
+.cc-qinsight{font-size:12px;color:var(--t2);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-style:italic}
 .cc-profile{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:4px}
 .cc-focus-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-bottom:3px}
 .cc-focus-text{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:2px}
@@ -921,6 +947,60 @@ function buildCC(r,uid){
       '<div class="cc-ww-label">What went well</div>'+
       '<div class="cc-ww-text">'+r.wentWell+'</div>'+
       '</div>';
+  }
+
+  // Top players coached
+  if(r.topPlayers && r.topPlayers.length){
+    // Normalise — could be ['Jamie',...] or [{name:'Jamie',count:18},...]
+    var players = r.topPlayers.map(function(p){
+      if(typeof p === 'string') return {name:p, count:0};
+      return {name:p.name||p.player||'Player', count:p.count||p.mentions||0};
+    });
+    // Sort by count desc
+    players.sort(function(a,b){return b.count-a.count;});
+    var top5 = players.slice(0,5);
+    var maxCount = top5[0] && top5[0].count ? top5[0].count : 1;
+    html+='<div class="cc-players">'+
+      '<div class="cc-players-label">Players you coached most</div>';
+    top5.forEach(function(p){
+      var pct = p.count > 0 ? Math.max(8, (p.count/maxCount)*100) : 0;
+      html+='<div class="cc-player-row">'+
+        '<span class="cc-player-name">'+p.name+'</span>'+
+        '<div class="cc-player-bar"><div class="cc-player-fill" style="width:'+pct+'%"></div></div>'+
+        '<span class="cc-player-count">'+(p.count>0?p.count+' mentions':'')+'</span>'+
+        '</div>';
+    });
+    html+='</div>';
+  }
+
+  // Question depth (surface vs connecting vs extending)
+  if(r.questionQuality){
+    var qq = r.questionQuality;
+    var qs = qq.surface||0, qc = qq.connecting||0, qe = qq.extending||0;
+    var qt = qs+qc+qe;
+    if(qt > 0){
+      html+='<div class="cc-qdepth">'+
+        '<div class="cc-qdepth-label">Question depth — how your questions guide thinking</div>';
+      [
+        {l:'Surface',    d:'Recall — "What did you do?"',                     v:qs, c:'qt-surface'},
+        {l:'Connecting', d:'Linking ideas — "Why did that work?"',            v:qc, c:'qt-connecting'},
+        {l:'Extending',  d:'Stretch thinking — "What else could you try?"',   v:qe, c:'qt-extending'}
+      ].forEach(function(t){
+        var pct = qt > 0 ? (t.v/qt)*100 : 0;
+        var pctTxt = qt > 0 ? Math.round(pct) : 0;
+        html+='<div class="cc-qtier">'+
+          '<div class="cc-qtier-head">'+
+          '<div><div class="cc-qtier-name">'+t.l+'</div><div class="cc-qtier-desc">'+t.d+'</div></div>'+
+          '<span class="cc-qtier-count">'+t.v+' · '+pctTxt+'%</span>'+
+          '</div>'+
+          '<div class="cc-qtier-track"><div class="cc-qtier-fill '+t.c+'" style="width:'+pct+'%"></div></div>'+
+          '</div>';
+      });
+      if(r.questionQualityInsight){
+        html+='<div class="cc-qinsight">'+r.questionQualityInsight+'</div>';
+      }
+      html+='</div>';
+    }
   }
 
   // Footer — focus + profile
